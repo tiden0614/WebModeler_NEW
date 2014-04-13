@@ -19,9 +19,9 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 		}
 		var sP = startObj.WMGetClosestPoint(endObj.getPosition());
 		var eP = endObj.WMGetClosestPoint(startObj.getPosition());
-		var group = WMGroup.getNewInstance({x: 0, y: 0});
+		var group = WMGroup.newInstance({x: 0, y: 0});
 		var line = new Kinetic.Line({
-			points: [sP, eP], stroke: black, strokeWidth: 2
+			points: [sP.x, sP.y, eP.x, eP.y], stroke: "black", strokeWidth: 2
 		});
 		var text = new Kinetic.Text({
 			x: (sP.x + eP.x) / 2, y: (sP.y + eP.y) / 2,
@@ -34,20 +34,30 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			width: text.getWidth(), height: text.getHeight(),
 			opcity: 0.5, fill: "lightyellow"
 		});
+		var inheritArrow = WMUtils.getImage({
+			x: eP.x, y: eP.y, width: 16, height: 16,
+			src: "icons/inherit-arrow.png", offset: {x: 8, y: 0},
+			rotation: WMUtils.getRotationAngle(sP, eP)
+		});
 		(function(){
 			group.WMAddComponent(line, "line");
 			group.WMAddComponent(text, "text");
 			group.WMAddComponent(textHitBox, "textHitBox");
+			group.WMAddComponent(inheritArrow, "inheritArrow");
 			group.editable = false;
 			group.start = config["start"];
 			group.end = config["end"];
 			group.WMRefreshPosition = function(){
-				sP = startObj.WMGetClosestPoint(endObj.getPosition());
-				eP = endObj.WMGetClosestPoint(startObj.getPosition());
-				text.setX((sP.x + eP.x) / 2);
-				text.setY((sP.y + eP.y) / 2);
-				textHitBox.setX((sP.x + eP.x) / 2);
-				textHitBox.setY((sP.y + eP.y) / 2);
+				var sp = startObj.WMGetClosestPoint(endObj.getPosition());
+				var ep = endObj.WMGetClosestPoint(startObj.getPosition());
+				line.setPoints([sp.x, sp.y, ep.x, ep.y]);
+				text.setX((sp.x + ep.x) / 2);
+				text.setY((sp.y + ep.y) / 2);
+				textHitBox.setX((sp.x + ep.x) / 2);
+				textHitBox.setY((sp.y + ep.y) / 2);
+				inheritArrow.setX(ep.x);
+				inheritArrow.setY(ep.y);
+				inheritArrow.setRotation(WMUtils.getRotationAngle(sp, ep));
 			};
 			group.WMGetTheOtherSide = function(obj){
 				var target = null;
@@ -58,17 +68,26 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 				}
 				return target;
 			};
+			group.WMGetIdString = function(){
+				return "WMRelation { id: " + this.id + " }";
+			};
 		})();
 		WMRelationStorage.push(group);
 		return group;
 	};
 
 	var pushIntoWMElementRelMap = function(config, rel){
-		var start, end = config["start"], config["end"];
+		var start = config["start"], end = config["end"];
 		if(start != null && end != null){
+			debugLogger.log("Pushing " + rel.WMGetIdString() 
+					+ " into WMElementRelMap, "
+					+ "start: " + start.WMGetIdString()
+					+ ", end: " + end.WMGetIdString());
 			var sMap;
 			if(WMElementRelMap[start.id] == null){
 				sMap = WMElementRelMap[start.id] = {};
+			} else {
+				sMap = WMElementRelMap[start.id];
 			}
 			if(sMap[end.id] == null){
 				sMap[end.id] = [];
@@ -78,6 +97,8 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			var eMap;
 			if(WMElementRelMap[end.id] == null){
 				eMap = WMElementRelMap[end.id] = {};
+			} else {
+				eMap = WMElementRelMap[end.id];
 			}
 			if(eMap[start.id] == null){
 				eMap[start.id] = [];
@@ -99,10 +120,12 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			return generateNewWMRelationComponents(config);
 		},
 		connect: function(config){
-			var start, end = config["start"], config["end"];
+			var start = config["start"], end = config["end"];
 			if(start != null && end != null){
 				var rel = this.newInstance(config);
 				pushIntoWMElementRelMap(config, rel);
+				var layer = end.getLayer();
+				layer.add(rel);
 			}
 		},
 		refreshRelationsByObj: function(obj){

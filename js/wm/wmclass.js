@@ -25,7 +25,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var generateNewWMClassInnerComponents = function(config){
         debugLogger.log("Constructing new WMClass: " + WMUtils.getObjectStr(config));
         var group = new WMGroup.newInstance({
-            x: config["x"], y: config["y"], id: 0
+            x: config["x"], y: config["y"]
         });
         var rect = new Kinetic.Rect({
             x: 0, y: 0,
@@ -83,8 +83,16 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 			group.gestureCreated = config["gestureCreated"];
 			group.holdStart = false;
 			group.holdPoint = {x: 0, y: 0};
+			group.longPressConnect = false;
 			group.toggleComponents = [attrAdder, methAdder];
 			var hammer = new Hammer(group);
+			hammer.on("dbltap", function(){
+				eventLogger.log("Double Tapped " + this.WMGetIdString());
+				this.holdStart = false;
+				if(!this.gestureCreated){
+					this.WMToggleComponents();
+				}
+			});
 			hammer.on("touchmove", function(e){
 				e.preventDefault();
 				eventLogger.log("TOUCHMOVE on " + this.WMGetIdString()
@@ -97,8 +105,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 						this.holdStart = false;
                     }
 				}
-                /* 只有一指操作时，为普通的拖拽操作 */
-				if(e.touches.length == 1 && !this.editable){
+				if(e.touches.length == 1 && !this.editable && !this.longPressConnect){
 					eventLogger.log("DRAGGING on " + this.WMGetIdString()
 						+ ", p: " + WMUtils.getObjectStr(p));
 					var rect = this.WMGetComponent("rect");
@@ -107,9 +114,10 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 				        y: p.y - this.getY() - rect.getHeight() / 2
 					};
 					this.move(moveP);
-					this.getLayer().draw();
+					this.getLayer().batchDraw();
                 /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
-				} else if (e.touches.length == 2 && !this.editable && this.gestureCreated){
+				} else if (e.touches.length == 2 && !this.editable 
+						&& !this.longPressConnect && this.gestureCreated){
 					eventLogger.log("DRAGGING on Gesture Created "
 							+ this.WMGetIdString() + ", p:"
 							+ WMUtils.getObjectStr(p));
@@ -121,41 +129,74 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 						y: p.y - this.getY() - rect.getHeight() / 2
 					};
 					this.move(moveP);
-					this.getLayer().draw();
+					this.getLayer().newConnectLineHitBox.remove();
+					this.getLayer().batchDraw();
 				}
 			});
 			hammer.on("touchend", function(){
 				eventLogger.log("TOUCHEND on " + this.WMGetIdString());
 				this.gestureCreated = false;
 				this.holdStart = false;
+				if(this.longPressConnect && false){
+					this.longPressConnect = false;
+					if(this.longPressConnectLine != null){
+						this.longPressConnectLine.destroy();
+						this.longPressConnectLine = null;
+						var __layer = this.getLayer();
+						if(__layer){
+							__layer.newConnectLineHitBox.remove();
+							__layer.draw();
+						}
+					}
+				}
 			});
 			hammer.on("touchstart", function(e){
 				e.preventDefault();
-				eventLogger.log("TOUCHSTART on " + this.WMGetIdString());
 				if(!this.gestureCreated){
+					eventLogger.log("TOUCHSTART on " + this.WMGetIdString());
 					this.holdStart = true;
-				}
-				if(e.touches.length > 1){
 					this.holdPoint = getPointOnStage({
 						x: e.touches[0]["pageX"],
 						y: e.touches[0]["pageY"]
 					});
 					var self = this;
-					setTimeout(function(){
-						if(self.holdStart){
-							eventLogger.log("2 TOUCHES HOLD on "
-								+ self.WMGetIdString());
-							self.holdStart = false;
-							var _newCLass = newInstance({
-								x: self.holdPoint["x"] - defaultWidth / 2,
-								y: self.holdPoint["y"] - defaultHeight / 2,
-								editable: false,
-								gestureCreated: true
-							});
-							self.getLayer().add(_newCLass);
-							self.getLayer().draw();
-						}
-					}, 1000);
+					if(e.touches.length == 1 && !this.editable){
+						setTimeout(function(){
+							if(self.holdStart && !self.longPressConnect){
+								eventLogger.log("1 TOUCH HOLD on"
+									+ self.WMGetIdString());
+								self.longPressConnect = true;
+								self.longPressConnectLine = new Kinetic.Line({
+									points: [self.holdPoint.x, self.holdPoint.y,
+									self.holdPoint.x, self.holdPoint.y],
+									stroke: "black", strokeWidth: 2
+								});
+								var __layer = self.getLayer();
+								WMUtils.globalFocus(self);
+								__layer.add(self.longPressConnectLine);
+								__layer.add(__layer.newConnectLineHitBox);
+								self.getLayer().draw();
+							}
+						}, 1500);
+					} else if(e.touches.length > 1 && !this.editable){
+						setTimeout(function(){
+							if(self.holdStart){
+								eventLogger.log("2 TOUCHES HOLD on "
+									+ self.WMGetIdString());
+								self.holdStart = false;
+								self.longPressConnect = false;
+								var _newClass = newInstance({
+									x: self.holdPoint["x"] - defaultWidth / 2,
+									y: self.holdPoint["y"] - defaultHeight / 2,
+									editable: false, gestureCreated: true
+								});
+								WMRelation.connect({start: _newClass, end: self});
+								self.getLayer().add(_newClass);
+								self.getLayer().newConnectLineHitBox.remove();
+								self.getLayer().draw();
+							}
+						}, 1000);
+					}
 				}
 			});
         })();
@@ -164,7 +205,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 
     /* 生成新属性的组件 */
     var generateNewWMClassAttribute = function(config){
-        confit = WMUtils.validateConfig(config, {
+        config = WMUtils.validateConfig(config, {
             x: 0, y: 0, name: "attribute", id: 0, WMAttrType: "attr"
         });
         debugLogger.log("Adding Attr: " + WMUtils.getObjectStr({
@@ -223,9 +264,6 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         this.WMGetComponent("attrSeparator").getPoints()[2] = width - 1;
         var nameText = this.WMGetComponent("nameText");
         nameText.setX(width / 2 - nameText.getWidth() / 2);
-        if(this.getLayer() != null){
-            this.getLayer().draw();
-        }
     };
 
     var resetClassWidth = function(){
@@ -241,6 +279,10 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             width = Math.max(width, 25 + this.WMGetAttrWidth());
         });
         setClassWidth.call(this, width);
+		WMRelation.refreshRelationsByObj(this);
+        if(this.getLayer() != null){
+            this.getLayer().draw();
+        }
     };
 
     var addAttr = function(c){
@@ -250,7 +292,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         c["id"] = this.attrIdCount++;
         c["WMClassId"] = this.id;
         var attr = generateNewWMClassAttribute(c);
-        pool.WMAddComponent(attr, "" + c["id"]);
+        pool.WMAddComponent(attr, "" + attr.id);
         this.toggleComponents.push(attr.WMGetComponent("remove"));
         var rect = this.WMGetComponent("rect");
         rect.setHeight(rect.getHeight() + attrHeight);
@@ -269,7 +311,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         c["id"] = this.methIdCount++;
         c["WMClassId"] = this.id;
         var meth = generateNewWMClassAttribute(c);
-        pool.WMAddComponent(meth, "" + c["id"]);
+        pool.WMAddComponent(meth, "" + meth.id);
         this.toggleComponents.push(meth.WMGetComponent("remove"));
         var rect = this.WMGetComponent("rect");
         rect.setHeight(rect.getHeight() + attrHeight);
@@ -287,7 +329,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             name: attr.WMGetText()
         }) + " from " + this.WMGetIdString());
         delete pool["WMComponents"][id];
-        attr.remove();
+        attr.destroy();
         if(poolName == "attrPool"){
             var moveParam = {x: 0, y: -attrHeight};
             this.WMGetComponent("attrSeparator").move(moveParam);
@@ -407,24 +449,31 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         var _id = WMClassIdCount++;
         config = WMUtils.validateConfig(config, {
             x: 0, y: 0, width: defaultWidth, height: defaultHeight,
-            name: "NewClass" + _id, id: _id, editable: true,
-            gestureCreated: false
+            name: "NewClass" + _id, editable: true, gestureCreated: false
         });
         var group = generateNewWMClassInnerComponents(config);
         WMClassMap["" + _id] = group;
 
         group.WMGetClosestPoint = function(point){
             var p = getClosestConnectPoint.call(this, point);
+			/*
             debugLogger.log("For point: " + WMUtils.getObjectStr(point)
                 + " Got THE Closest Connector: "
                 + WMUtils.getObjectStr(p)
                 + " of " + this.WMGetIdString());
+			 */
             return p;
         };
 
         group.WMGetIdString = function(){
             return "WMClass { id: " + this.id + " }";
         };
+
+		var oriMove = group.move;
+		group.move = function(p){
+			WMRelation.refreshRelationsByObj(this);
+			oriMove.call(this, p);
+		};
 
         group.WMToggleComponents = function(editable){
             if(editable == null){
@@ -465,13 +514,18 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                 WMAttrType: "meth"
             });
         });
-
-        group.on("dblclick dbltap", function(){
-            eventLogger.log("Double Tapped " + this.WMGetIdString());
-            if(!this.gestureCreated){
-                group.WMToggleComponents();
-            }
-        });
+		
+		group.insideThis = function(p){
+			var inside = false;
+			var rect = this.WMGetComponent("rect");
+			var w = rect.getWidth(), h = rect.getHeight();
+			var _p = this.getAbsolutePosition();
+			if(p.x >= _p.x && p.x <= _p.x + w
+				&& p.y >= _p.y && p.y <= _p.y + h){
+				inside = true;
+			}
+			return inside;
+		};
 
         (function(){
             group.WMToggleComponents(config["editable"]);
@@ -487,7 +541,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 		for(var i = 0; i < WMClassStorage.length; i++){
 			var wmclass = WMClassStorage[i];
 			if(wmclass.insideThis(stagePoint)){
-				if(hitClass = null){
+				if(hitClass == null){
 					hitClass = wmclass;
 				} else {
 					if(wmclass.getZIndex() > hitClass.getZIndex()){

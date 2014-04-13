@@ -34,8 +34,10 @@ define(["Kinetic"], function(Kinetic){
         LOG: true,
         INFO: true,
         ERROR: true,
-        EVENT: false
+        EVENT: true
     };
+	var globalFocus = null;
+	var PI = Math.PI, PI_2 = Math.PI / 2;
     return {
         validateConfig: function(config, attributes){
             config = config || {};
@@ -58,7 +60,8 @@ define(["Kinetic"], function(Kinetic){
             if(config["src"] != null){
                 var kObject = new Kinetic.Image({
                     x: config["x"], y: config["y"],
-                    width: config["width"], height: config["height"]
+                    width: config["width"], height: config["height"],
+					offset: config["offset"], rotation: config["rotation"]
                 });
                 if(imgMap[config["src"]] != null){
                     kObject.setImage(imgMap[config["src"]]);
@@ -121,14 +124,53 @@ define(["Kinetic"], function(Kinetic){
             var x = p.x;
             var y = p.y;
 
-            var _c = stage.getContainer();
-            var bbox = _c.getBoundingClientRect();
+			var bbox = this.box;
+			if(bbox == null){
+				var _c = stage.getContainer();
+				bbox = _c.getBoundingClientRect();
+				this.box = bbox;
+			}
 
 
             return {
                 x: x - bbox.left,
                 y: y - bbox.top
             };
-        }
+        },
+		getRotationAngle: function(ps, pe){
+			var tan;
+			if((pe.x - ps.x) != 0){
+				tan = (ps.y - pe.y) / (pe.x - ps.x);
+			} else {
+				tan = PI_2;
+			}
+			var area = 1;
+			if((pe.y - ps.y) > 0){
+				if((pe.x - ps.x) > 0){
+					area = 4;
+				} else {
+					area = 2;
+				}
+			} else {
+				if((pe.x - ps.x) > 0){
+					area = 1;
+				} else {
+					area = 2;
+				}
+			}
+			var r = PI_2 - Math.atan(tan);
+			if (area == 2 || area == 3){
+				r += PI;
+			}
+			return r * 180 / PI;
+		},
+		globalFocus: function(f){
+			if(f == null){
+				return globalFocus;
+			} else {
+				globalFocus = f;
+				return f;
+			}
+		}
     };
 });
