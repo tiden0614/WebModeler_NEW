@@ -21,13 +21,16 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
     var stage = new Kinetic.Stage({
 		width: 800, height: 600, container: "stage", listening: true
     });
-	WMClass.init({stage: stage});
     var layer = new Kinetic.Layer();
+	WMClass.init({stage: stage});
 	layer.newConnectLineHitBox = new Kinetic.Rect({
 		x: 0, y: 0, width: 800, height: 600,
 		fill: "lightyellow", opacity: 0.3
 	});
-
+	layer.lineEndDrawingHitBox = new Kinetic.Rect({
+		x: 0, y: 0, width: 200, height: 200,
+		fill: "lightblue", opacity: 0.3
+	});
 	layer.backgroundHitBox = new Kinetic.Rect({
 		x: 0, y: 0, width: 800, height: 600,
 		fill: "black", opacity: 0
@@ -42,12 +45,9 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
     layer.add(_class);
     layer.add(_class1);
     stage.add(layer);
-	//WMRelation.connect({"start": _class, "end": _class1});
-	layer.draw();
-	var hammer = new Hammer(layer.newConnectLineHitBox);
-	hammer.on("touchmove", function(e){
+	var newConnectLineHitBoxHammer = new Hammer(layer.newConnectLineHitBox);
+	newConnectLineHitBoxHammer.on("touchmove", function(e){
 		e.preventDefault();
-		eventLogger.log("TOUCHING ON STAGE!!");
 		var f = WMUtils.globalFocus();
 		if(f != null){
 			var l = f.longPressConnectLine;
@@ -63,9 +63,8 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 			}
 		}
 	});
-	hammer.on("tap", function(e){
+	newConnectLineHitBoxHammer.on("tap", function(e){
 		e.preventDefault();
-		eventLogger.log("TAP ON HITBOX!!");
 		var f = WMUtils.globalFocus();
 		if(f != null){
 			f.longPressConnect = false;
@@ -81,9 +80,8 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 			layer.draw();
 		}
 	});
-	hammer.on("touchend", function(e){
+	newConnectLineHitBoxHammer.on("touchend", function(e){
 		e.preventDefault();
-		eventLogger.log("TOUCHEND ON HITBOX!!");
 		var f = WMUtils.globalFocus();
 		WMUtils.globalFocus(null);
 		if(f != null){
@@ -112,14 +110,46 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 	var backgroundHitBoxHammer = new Hammer(layer.backgroundHitBox);
 	backgroundHitBoxHammer.on("tap", function(){
 		var focus = WMUtils.globalFocus();
-		debugLogger.log("tapped the backgroundhitbox");
 		if(focus != null){
 			if(focus.editable){
 				if(typeof(focus.WMToggleComponents) == "function"){
-					debugLogger.log("gonna hide components of the focus");
 					focus.WMToggleComponents(false);
 				}
 			}
 		}
+	});
+	var lineEndDrawingHitBoxHammer = new Hammer(layer.lineEndDrawingHitBox);
+	lineEndDrawingHitBoxHammer.on("touchstart", function(e){
+		var p = WMUtils.getPointOnStage({
+			x: e.touches[0]["pageX"],
+			y: e.touches[0]["pageY"]
+		}, stage);
+		if(this.lineTrack == null){
+			this.lineTrack = new Kinetic.Line({
+				stroke: "black", strokeWidth: 3
+			});
+		}
+		this.lineTrack.points([p.x, p.y]);
+		this.lineTrackPoints = [{X: p.x, Y: p.y}];
+		this.getLayer().add(this.lineTrack);
+	});
+	lineEndDrawingHitBoxHammer.on("touchmove", function(e){
+		var p = WMUtils.getPointOnStage({
+			x: e.touches[0]["pageX"],
+			y: e.touches[0]["pageY"]
+		}, stage);
+		var ps = this.lineTrack.points();
+		ps.push(p.x);
+		ps.push(p.y);
+		this.lineTrackPoints.push({X: p.x, Y: p.y});
+		this.getLayer().batchDraw();
+	});
+	lineEndDrawingHitBoxHammer.on("release", function(e){
+		var rResult = WMUtils.recognizeTrack(this.lineTrackPoints);
+		debugLogger.log("Recognized Line End Shape: " + rResult.Name);
+		this.lineTrack.remove();
+		this.remove();
+		var focus = this.lineEndFocus;
+		this.lineEndFocus = null;
 	});
 });

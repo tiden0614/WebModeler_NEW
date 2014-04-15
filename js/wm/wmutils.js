@@ -28,6 +28,7 @@ define(["Kinetic"], function(Kinetic){
         return result;
     };
     var imgMap = {};
+	var recognizer = new NDollarRecognizer(false);
     var enabledLoggerLevel = {
         DEBUG: true,
         WARN: true,
@@ -171,6 +172,9 @@ define(["Kinetic"], function(Kinetic){
 				globalFocus = f;
 				return f;
 			}
+		},
+		recognizeTrack: function(ps){
+			return recognizer.Recognize(ps, false, false, true);
 		}
     };
 });

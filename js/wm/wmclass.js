@@ -172,7 +172,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 								__layer.add(__layer.newConnectLineHitBox);
 								self.getLayer().draw();
 							}
-						}, 1500);
+						}, 800);
 					} else if(e.touches.length > 1 && !this.editable){
 						setTimeout(function(){
 							if(self.holdStart && !self.editable){
@@ -190,7 +190,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 								self.getLayer().newConnectLineHitBox.remove();
 								self.getLayer().draw();
 							}
-						}, 1000);
+						}, 400);
 					}
 				}
 			});

@@ -39,19 +39,57 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			src: "icons/inherit-arrow.png", offset: {x: 8, y: 0},
 			rotation: WMUtils.getRotationAngle(sP, eP)
 		});
+		var lineTail = WMUtils.getImage({
+			x: sP.x, y: sP.y, width: 16, height: 16,
+			src: "icons/inherit-arrow.png", offset: {x: 8, y: 0},
+			rotation: 180 + WMUtils.getRotationAngle(sP, eP)
+		});
 		var lineHeadHitBox = new Kinetic.Rect({
 			x: eP.x, y: eP.y, width: 60, height: 60, offset: {x: 30, y: 30},
-			fill: "black", opacity: 0.3
+			fill: "black", opacity: 0
 		});
 		var lineTailHitBox = new Kinetic.Rect({
 			x: sP.x, y: sP.y, width: 60, height: 60, offset: {x: 30, y: 30},
-			fill: "black", opacity: 0.3
+			fill: "black", opacity: 0
 		});
 		(function(){
+			lineHeadHitBox.lineEnd = "head";
+			lineTailHitBox.lineEnd = "tail";
+			lineHeadHitBox.lineEndObj = config["end"];
+			lineTailHitBox.lineEndObj = config["start"];
+			var onHitBoxTouchStart = function(e){
+				this.setOpacity(0.3);
+				this.getLayer().draw();
+			};
+			var onHitBoxTouchEnd   = function(e){
+				this.setOpacity(0);
+				this.getLayer().draw();
+			};
+			var onHitBoxHold       = function(e){
+				this.setOpacity(0);
+				var __l = this.getLayer();
+				var hbx = __l.lineEndDrawingHitBox;
+				var rec = this.lineEndObj.WMGetComponent("rect");
+				hbx.setPosition(this.lineEndObj.getPosition());
+				hbx.setWidth(rec.getWidth());
+				hbx.setHeight(rec.getHeight());
+				__l.add(__l.lineEndDrawingHitBox);
+				__l.draw();
+				__l.lineEndDrawingHitBox.lineEndFocus = this;
+			};
+			var lineHeadHitBoxHammer = new Hammer(lineHeadHitBox);
+			var lineTailHitBoxHammer = new Hammer(lineTailHitBox);
+			lineHeadHitBoxHammer.on("touchstart", onHitBoxTouchStart);
+			lineTailHitBoxHammer.on("touchstart", onHitBoxTouchStart);
+			lineHeadHitBoxHammer.on("touchend", onHitBoxTouchEnd);
+			lineTailHitBoxHammer.on("touchend", onHitBoxTouchEnd);
+			lineHeadHitBoxHammer.on("hold", onHitBoxHold);
+			lineTailHitBoxHammer.on("hold", onHitBoxHold);
 			group.WMAddComponent(line, "line");
 			group.WMAddComponent(text, "text");
 			group.WMAddComponent(textHitBox, "textHitBox");
 			group.WMAddComponent(lineHead, "lineHead");
+			//group.WMAddComponent(lineTail, "lineTail");
 			group.WMAddComponent(lineHeadHitBox, "lineHeadHitBox");
 			group.WMAddComponent(lineTailHitBox, "lineTailHitBox");
 			group.editable = false;
@@ -61,15 +99,16 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 				var sp = startObj.WMGetClosestPoint(endObj.getPosition());
 				var ep = endObj.WMGetClosestPoint(startObj.getPosition());
 				line.setPoints([sp.x, sp.y, ep.x, ep.y]);
-				text.setX((sp.x + ep.x) / 2);
-				text.setY((sp.y + ep.y) / 2);
-				textHitBox.setX((sp.x + ep.x) / 2);
-				textHitBox.setY((sp.y + ep.y) / 2);
-				lineHead.setX(ep.x);
-				lineHead.setY(ep.y);
-				lineHead.setRotation(WMUtils.getRotationAngle(sp, ep));
-				lineHeadHitBox.setPosition({x: ep.x, y: ep.y});
-				lineTailHitBox.setPosition({x: sp.x, y: sp.y});
+				var md = {x: (sp.x + ep.x) / 2, y: (sp.y + ep.y) / 2};
+				var ra = WMUtils.getRotationAngle(sp, ep);
+				text.setPosition(md);
+				textHitBox.setPosition(md);
+				lineHead.setPosition(ep);
+				lineHead.setRotation(ra)
+				lineTail.setPosition(sp);
+				lineTail.setRotation(180 + ra);
+				lineHeadHitBox.setPosition(ep);
+				lineTailHitBox.setPosition(sp);
 			};
 			group.WMGetTheOtherSide = function(obj){
 				var target = null;
