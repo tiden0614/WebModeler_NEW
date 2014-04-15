@@ -165,7 +165,7 @@ define(["Kinetic"], function(Kinetic){
 			return r * 180 / PI;
 		},
 		globalFocus: function(f){
-			if(f == null){
+			if(arguments.length <= 0){
 				return globalFocus;
 			} else {
 				globalFocus = f;

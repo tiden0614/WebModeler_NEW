@@ -34,16 +34,26 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			width: text.getWidth(), height: text.getHeight(),
 			opcity: 0.5, fill: "lightyellow"
 		});
-		var inheritArrow = WMUtils.getImage({
+		var lineHead = WMUtils.getImage({
 			x: eP.x, y: eP.y, width: 16, height: 16,
 			src: "icons/inherit-arrow.png", offset: {x: 8, y: 0},
 			rotation: WMUtils.getRotationAngle(sP, eP)
+		});
+		var lineHeadHitBox = new Kinetic.Rect({
+			x: eP.x, y: eP.y, width: 60, height: 60, offset: {x: 30, y: 30},
+			fill: "black", opacity: 0.3
+		});
+		var lineTailHitBox = new Kinetic.Rect({
+			x: sP.x, y: sP.y, width: 60, height: 60, offset: {x: 30, y: 30},
+			fill: "black", opacity: 0.3
 		});
 		(function(){
 			group.WMAddComponent(line, "line");
 			group.WMAddComponent(text, "text");
 			group.WMAddComponent(textHitBox, "textHitBox");
-			group.WMAddComponent(inheritArrow, "inheritArrow");
+			group.WMAddComponent(lineHead, "lineHead");
+			group.WMAddComponent(lineHeadHitBox, "lineHeadHitBox");
+			group.WMAddComponent(lineTailHitBox, "lineTailHitBox");
 			group.editable = false;
 			group.start = config["start"];
 			group.end = config["end"];
@@ -55,9 +65,11 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 				text.setY((sp.y + ep.y) / 2);
 				textHitBox.setX((sp.x + ep.x) / 2);
 				textHitBox.setY((sp.y + ep.y) / 2);
-				inheritArrow.setX(ep.x);
-				inheritArrow.setY(ep.y);
-				inheritArrow.setRotation(WMUtils.getRotationAngle(sp, ep));
+				lineHead.setX(ep.x);
+				lineHead.setY(ep.y);
+				lineHead.setRotation(WMUtils.getRotationAngle(sp, ep));
+				lineHeadHitBox.setPosition({x: ep.x, y: ep.y});
+				lineTailHitBox.setPosition({x: sp.x, y: sp.y});
 			};
 			group.WMGetTheOtherSide = function(obj){
 				var target = null;

@@ -89,8 +89,15 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 			hammer.on("dbltap", function(){
 				eventLogger.log("Double Tapped " + this.WMGetIdString());
 				this.holdStart = false;
-				if(!this.gestureCreated){
-					this.WMToggleComponents();
+				if(!this.gestureCreated && !this.editable){
+					var focus = WMUtils.globalFocus();
+					if(focus != this){
+						if(focus && typeof(focus.WMToggleComponents) == "function"){
+							focus.WMToggleComponents(false);
+						}
+						this.WMToggleComponents(true);
+						WMUtils.globalFocus(this);
+					}
 				}
 			});
 			hammer.on("touchmove", function(e){
@@ -137,18 +144,6 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 				eventLogger.log("TOUCHEND on " + this.WMGetIdString());
 				this.gestureCreated = false;
 				this.holdStart = false;
-				if(this.longPressConnect && false){
-					this.longPressConnect = false;
-					if(this.longPressConnectLine != null){
-						this.longPressConnectLine.destroy();
-						this.longPressConnectLine = null;
-						var __layer = this.getLayer();
-						if(__layer){
-							__layer.newConnectLineHitBox.remove();
-							__layer.draw();
-						}
-					}
-				}
 			});
 			hammer.on("touchstart", function(e){
 				e.preventDefault();
@@ -162,7 +157,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 					var self = this;
 					if(e.touches.length == 1 && !this.editable){
 						setTimeout(function(){
-							if(self.holdStart && !self.longPressConnect){
+							if(self.holdStart && !self.longPressConnect && !self.editable){
 								eventLogger.log("1 TOUCH HOLD on"
 									+ self.WMGetIdString());
 								self.longPressConnect = true;
@@ -180,7 +175,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 						}, 1500);
 					} else if(e.touches.length > 1 && !this.editable){
 						setTimeout(function(){
-							if(self.holdStart){
+							if(self.holdStart && !self.editable){
 								eventLogger.log("2 TOUCHES HOLD on "
 									+ self.WMGetIdString());
 								self.holdStart = false;

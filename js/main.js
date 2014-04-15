@@ -15,23 +15,32 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 	var eventLogger = WMUtils.getLogger({
 		name: "main", level: "EVENT", on: true
 	});
+	var debugLogger = WMUtils.getLogger({
+		name: "main", level: "DEBUG", on: true
+	});
     var stage = new Kinetic.Stage({
 		width: 800, height: 600, container: "stage", listening: true
     });
 	WMClass.init({stage: stage});
     var layer = new Kinetic.Layer();
-    var _class = WMClass.newInstance({
-        x: 100, y: 100, editable: true
-    });
-    var _class1 = WMClass.newInstance({
-        x: 500, y: 300, editable: true
-    });
-    layer.add(_class);
-    layer.add(_class1);
 	layer.newConnectLineHitBox = new Kinetic.Rect({
 		x: 0, y: 0, width: 800, height: 600,
 		fill: "lightyellow", opacity: 0.3
 	});
+
+	layer.backgroundHitBox = new Kinetic.Rect({
+		x: 0, y: 0, width: 800, height: 600,
+		fill: "black", opacity: 0
+	});
+    var _class = WMClass.newInstance({
+        x: 100, y: 100, editable: false
+    });
+    var _class1 = WMClass.newInstance({
+        x: 500, y: 300, editable: false
+    });
+	layer.add(layer.backgroundHitBox);
+    layer.add(_class);
+    layer.add(_class1);
     stage.add(layer);
 	//WMRelation.connect({"start": _class, "end": _class1});
 	layer.draw();
@@ -76,6 +85,7 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 		e.preventDefault();
 		eventLogger.log("TOUCHEND ON HITBOX!!");
 		var f = WMUtils.globalFocus();
+		WMUtils.globalFocus(null);
 		if(f != null){
 			f.longPressConnect = false;
 			f.holdStart = false;
@@ -86,7 +96,7 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 					x: __ps[2], y: __ps[3]
 				};
 				var t = WMClass.getInstanceFromPoint(p);
-				if(t != null){
+				if(t != null && t != f){
 					WMRelation.connect({"start": f, "end": t});
 					eventLogger.log("Found t " + t.WMGetIdString());
 				}
@@ -97,6 +107,19 @@ require(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 		this.remove();
 		if(layer != null){
 			layer.draw();
+		}
+	});
+	var backgroundHitBoxHammer = new Hammer(layer.backgroundHitBox);
+	backgroundHitBoxHammer.on("tap", function(){
+		var focus = WMUtils.globalFocus();
+		debugLogger.log("tapped the backgroundhitbox");
+		if(focus != null){
+			if(focus.editable){
+				if(typeof(focus.WMToggleComponents) == "function"){
+					debugLogger.log("gonna hide components of the focus");
+					focus.WMToggleComponents(false);
+				}
+			}
 		}
 	});
 });
