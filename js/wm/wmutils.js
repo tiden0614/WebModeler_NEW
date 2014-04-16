@@ -35,7 +35,7 @@ define(["Kinetic"], function(Kinetic){
         LOG: true,
         INFO: true,
         ERROR: true,
-        EVENT: true
+        EVENT: false
     };
 	var globalFocus = null;
 	var PI = Math.PI, PI_2 = Math.PI / 2;
@@ -58,31 +58,35 @@ define(["Kinetic"], function(Kinetic){
             config = this.validateConfig(config, {
                 x: 0, y: 0, width: 50, height: 50, src: null
             });
-            if(config["src"] != null){
-                var kObject = new Kinetic.Image({
-                    x: config["x"], y: config["y"],
-                    width: config["width"], height: config["height"],
-					offset: config["offset"], rotation: config["rotation"]
-                });
-                if(imgMap[config["src"]] != null){
-                    kObject.setImage(imgMap[config["src"]]);
-                    if(kObject.getLayer() != null){
-                        kObject.draw();
-                    }
-                } else {
-                    var img = new Image();
-                    img.src = config["src"];
-                    img.addEventListener("load", function(){
-                        imgMap[config["src"]] = img;
-                        kObject.setImage(imgMap[config["src"]]);
-                        if(kObject.getLayer() != null){
-                            kObject.draw();
-                        }
-                    });
-                }
-                return kObject;
+			var loadImg = function(src){
+				var obj = this;
+				if(src != null){
+					if(imgMap[src] != null){
+						obj.setImage(imgMap[src]);
+						if(obj.getLayer() != null){
+							obj.draw();
+						}
+					} else {
+						var img = new Image();
+						img.src = src;
+						img.addEventListener("load", function(){
+							imgMap[src] = img;
+							obj.setImage(imgMap[src]);
+							if(obj.getLayer() != null){
+								obj.draw();
+							}
+						});
+					}
+				}
             }
-            return null;
+			var kObject = new Kinetic.Image({
+				x: config["x"], y: config["y"],
+				width: config["width"], height: config["height"],
+				offset: config["offset"], rotation: config["rotation"]
+			});
+			kObject.WMLoadImg = loadImg;
+			kObject.WMLoadImg(config["src"]);
+			return kObject;
         },
         getLogger: function(config){
             config = this.validateConfig(config, {

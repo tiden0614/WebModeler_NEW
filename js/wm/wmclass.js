@@ -444,7 +444,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         var _id = WMClassIdCount++;
         config = WMUtils.validateConfig(config, {
             x: 0, y: 0, width: defaultWidth, height: defaultHeight,
-            name: "NewClass" + _id, editable: true, gestureCreated: false
+            name: "NewClass" + _id, editable: false, gestureCreated: false
         });
         var group = generateNewWMClassInnerComponents(config);
         WMClassMap["" + _id] = group;

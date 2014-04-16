@@ -6,6 +6,11 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 	var WMRelationIdCount = 0;
 	var WMRelationStorage = [];
 	var WMElementRelMap = {};
+	var typeSrcMap = {
+		D: "icons/inherit-arrow.png",
+		X: "icons/rhombus.png",
+		line: "icons/blank.png"
+	};
 	var generateNewWMRelationComponents = function(config){
 		debugLogger.log("Creating New Relation");
 		config = WMUtils.validateConfig(config, {
@@ -41,7 +46,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 		});
 		var lineTail = WMUtils.getImage({
 			x: sP.x, y: sP.y, width: 16, height: 16,
-			src: "icons/inherit-arrow.png", offset: {x: 8, y: 0},
+			src: "icons/blank.png", offset: {x: 8, y: 0},
 			rotation: 180 + WMUtils.getRotationAngle(sP, eP)
 		});
 		var lineHeadHitBox = new Kinetic.Rect({
@@ -53,10 +58,20 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			fill: "black", opacity: 0
 		});
 		(function(){
-			lineHeadHitBox.lineEnd = "head";
-			lineTailHitBox.lineEnd = "tail";
+			lineHeadHitBox.lineEnd = "Head";
+			lineTailHitBox.lineEnd = "Tail";
 			lineHeadHitBox.lineEndObj = config["end"];
 			lineTailHitBox.lineEndObj = config["start"];
+			lineHeadHitBox.WMSwitchLineEndType = 
+			lineTailHitBox.WMSwitchLineEndType = function(type){
+				var lineEndImg = 
+					this.getParent().WMGetComponent("line" + this.lineEnd);
+				var src = typeSrcMap[type];
+				if(src == null){
+					src = typeSrcMap["inherit"];
+				}
+				lineEndImg.WMLoadImg(src);
+			};
 			var onHitBoxTouchStart = function(e){
 				this.setOpacity(0.3);
 				this.getLayer().draw();
@@ -86,10 +101,10 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			lineHeadHitBoxHammer.on("hold", onHitBoxHold);
 			lineTailHitBoxHammer.on("hold", onHitBoxHold);
 			group.WMAddComponent(line, "line");
-			group.WMAddComponent(text, "text");
-			group.WMAddComponent(textHitBox, "textHitBox");
+			//group.WMAddComponent(text, "text");
+			//group.WMAddComponent(textHitBox, "textHitBox");
 			group.WMAddComponent(lineHead, "lineHead");
-			//group.WMAddComponent(lineTail, "lineTail");
+			group.WMAddComponent(lineTail, "lineTail");
 			group.WMAddComponent(lineHeadHitBox, "lineHeadHitBox");
 			group.WMAddComponent(lineTailHitBox, "lineTailHitBox");
 			group.editable = false;
