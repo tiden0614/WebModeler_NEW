@@ -46,6 +46,15 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 					var __ps = l.points();
 					__ps[2] = p.x;
 					__ps[3] = p.y;
+					var t = WMClass.getInstanceFromPoint(p);
+					if(this.lastT){
+						this.lastT.setFill("white");
+					}
+					if(t != null && t != f){
+						var rect = t.WMGetComponent("rect");
+						rect.setFill("lightblue");
+						this.lastT = rect;
+					}
 					layer.batchDraw();
 				}
 			}
@@ -56,6 +65,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 			if(f != null){
 				f.longPressConnect = false;
 				f.holdStart = false;
+				f.WMGetComponent("rect").setFill("lightblue");
 				var l = f.longPressConnectLine;
 				if(l != null){
 					l.destroy();
@@ -74,6 +84,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 			if(f != null){
 				f.longPressConnect = false;
 				f.holdStart = false;
+				f.WMGetComponent("rect").setFill("white");
 				var l = f.longPressConnectLine;
 				if(l != null){
 					var __ps = l.points();
@@ -81,8 +92,13 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 						x: __ps[2], y: __ps[3]
 					};
 					var t = WMClass.getInstanceFromPoint(p);
+					if(this.lastT){
+						this.lastT.setFill("white");
+						this.lastT = null;
+					}
 					if(t != null && t != f){
 						WMRelation.connect({"start": f, "end": t});
+						t.WMGetComponent("rect").setFill("white");
 						eventLogger.log("Found t " + t.WMGetIdString());
 					}
 					l.destroy();
@@ -104,6 +120,8 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 					}
 				}
 			}
+			layer.lineEndDrawingHitBox.remove();
+			layer.draw();
 		});
 		backgroundHitBoxHammer.on("doubletap", function(){
 			debugLogger.log("About to draw global strokes");
