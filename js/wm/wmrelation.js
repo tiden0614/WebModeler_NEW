@@ -1,4 +1,4 @@
-define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"], 
+define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 		function(Kinetic, Hammer, WMUtils, WMGroup, WMClass){
 	var debugLogger = WMUtils.getLogger({name: "WMRelation", level: "DEBUG"});
 	var eventLogger = WMUtils.getLogger({name: "WMRelation", level: "EVENT"});
@@ -62,9 +62,9 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			lineTailHitBox.lineEnd = "Tail";
 			lineHeadHitBox.lineEndObj = config["end"];
 			lineTailHitBox.lineEndObj = config["start"];
-			lineHeadHitBox.WMSwitchLineEndType = 
+			lineHeadHitBox.WMSwitchLineEndType =
 			lineTailHitBox.WMSwitchLineEndType = function(type){
-				var lineEndImg = 
+				var lineEndImg =
 					this.getParent().WMGetComponent("line" + this.lineEnd);
 				var src = typeSrcMap[type];
 				if(src == null){
@@ -145,7 +145,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 	var pushIntoWMElementRelMap = function(config, rel){
 		var start = config["start"], end = config["end"];
 		if(start != null && end != null){
-			debugLogger.log("Pushing " + rel.WMGetIdString() 
+			debugLogger.log("Pushing " + rel.WMGetIdString()
 					+ " into WMElementRelMap, "
 					+ "start: " + start.WMGetIdString()
 					+ ", end: " + end.WMGetIdString());
@@ -173,10 +173,10 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 		}
 	};
 
-	var getWMRelationListByObj = function(obj){
+	var getWMRelationListById = function(id){
 		var list = null;
-		if(obj != null && WMElementRelMap[obj.id] != null){
-			list = WMElementRelMap[obj.id];
+		if(WMElementRelMap[id] != null){
+			list = WMElementRelMap[id];
 		}
 		return list;
 	};
@@ -195,7 +195,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 			}
 		},
 		refreshRelationsByObj: function(obj){
-			var oMap = getWMRelationListByObj(obj);
+			var oMap = getWMRelationListById(obj.id);
 			if(oMap == null){return;}
 			for(var t in oMap){
 				var list = oMap[t];
@@ -204,6 +204,21 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
 						list[i].WMRefreshPosition();
 					}
 				}
+			}
+		},
+		getRelMapById: function(id){
+			return getWMRelationListById(id);
+		},
+		deleteRelatedRelsById: function(oid){
+			var rMap = getWMRelationListById(oid);
+			for(var tid in rMap){
+				var tMap = getWMRelationListById(oid);
+				delete tMap[oid];
+				var otList = rMap[tid];
+				for(var i = 0; i < otList.length; i++){
+					otList[i].destroy();
+				}
+				delete rMap[tid];
 			}
 		}
 	};

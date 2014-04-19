@@ -97,16 +97,22 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             var className = _this.WMGetComponent("nameText");
             var classNamePos = getPointOnPage(className.getAbsolutePosition());
             classNameDiv.css({
-                top: classNamePos.y + 12, left: classNamePos.x, "z-index": 10
+                top: classNamePos.y + 15, left: classNamePos.x + 10,
+                "z-index": 10
             });
             var inputObj = $(generateInnerInput({
-                // top: classNamePos.y, left: classNamePos.x,
-                value: className.getText(), width: className.getWidth(),
+                value: className.getText(),
+                width: className.getWidth() - 30,
                 fontSize: className.getFontSize()
             }));
             inputObj.on("input", function(){
+                var cnp = getPointOnPage(className.getAbsolutePosition());
+                classNameDiv.css({
+                    top: cnp.y + 15, left: cnp.x + 10,
+                    "z-index": 10
+                });
                 className.setText($(this).val());
-                $(this).css("width", className.getWidth());
+                $(this).css("width", className.getWidth() - 30);
                 resetClassWidth.call(_this);
             });
             classNameDiv.append(inputObj);
@@ -216,6 +222,11 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 				        y: p.y - this.getY() - rect.getHeight() / 2
 					};
 					this.move(moveP);
+                    if(this.WMIsInsideTrash()){
+                        rect.setFill("red");
+                    } else {
+                        rect.setFill("white");
+                    }
 					this.getLayer().batchDraw();
                 /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
 				} else if (e.touches.length == 2 && !this.editable
@@ -239,6 +250,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 				eventLogger.log("TOUCHEND on " + this.WMGetIdString());
 				this.gestureCreated = false;
 				this.holdStart = false;
+                if(this.WMIsInsideTrash()){
+                    this.destroy();
+                }
 			});
 			hammer.on("touchstart", function(e){
 				e.preventDefault();
@@ -555,6 +569,24 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 			WMRelation.refreshRelationsByObj(this);
 			oriMove.call(this, p);
 		};
+
+        var oriDest = group.destroy;
+        group.destroy = function(){
+            WMRelation.deleteRelatedRelsById(group.id);
+            var layer = this.getLayer();
+            oriDest.call(this);
+            if(layer != null){
+                layer.draw();
+            }
+        };
+
+        group.WMIsInsideTrash = function(){
+            var rect = this.WMGetComponent("rect");
+            return this.getLayer().trash.WMIsInside({
+                x: this.getX() + rect.getWidth() / 2,
+                y: this.getY() + rect.getHeight() / 2
+            });
+        };
 
         group.WMToggleComponents = function(editable){
             if(editable == null){

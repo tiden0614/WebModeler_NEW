@@ -30,7 +30,20 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 			x: 0, y: 0, width: config["width"], height: config["height"],
 			fill: "black", opacity: 0
 		});
+		layer.trash = WMUtils.getImage({
+			width: 100, height: 100,
+			x: 0, y: stage.getHeight() - 100,
+			src: "icons/trash.png"
+		});
+		layer.trash.WMIsInside = function(p){
+			var trash = layer.trash;
+			var pos = trash.getPosition();
+			var w = trash.getWidth(), h = trash.getHeight();
+			return (p.x > pos.x && p.x < pos.x + w
+				 && p.y > pos.y && p.y < pos.y + h);
+		};
 		WMClass.init({stage: stage});
+		layer.add(layer.trash);
 		layer.add(layer.backgroundHitBox);
 		stage.add(layer);
 		var newConnectLineHitBoxHammer = new Hammer(layer.newConnectLineHitBox);
