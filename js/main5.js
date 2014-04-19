@@ -15,6 +15,7 @@ require.config({
 });
 require(["WMClass", "WMStage"], function(WMClass, WMStage){
 	WMStage.init({
-		container: "stage", width: 800, height: 600
+		container: "stage", width: 800, height: 600,
+        elementFactory: WMClass
 	});
 });

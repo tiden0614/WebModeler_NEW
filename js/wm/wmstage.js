@@ -1,14 +1,21 @@
-define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
-		function(Kinetic, WMClass, WMRelation, Hammer, WMUtils){
+define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
+		function(Kinetic, WMRelation, Hammer, WMUtils){
 	var eventLogger = WMUtils.getLogger({
 		name: "main", level: "EVENT", on: true
 	});
 	var debugLogger = WMUtils.getLogger({
 		name: "main", level: "DEBUG", on: true
 	});
+	var eventLogger = WMUtils.getLogger({
+		name: "main", level: "EVENT", on: true
+	});
 	var stage = null;
 	var layer = null;
 	var _init = function(config){
+		var elementFactory = config["elementFactory"];
+		if(elementFactory == null){
+			eventLogger.log("No Element Factory Specified!");
+		}
 		stage = new Kinetic.Stage({
 			width: config["width"], height: config["height"],
 			container: config["container"], listening: true
@@ -42,7 +49,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 			return (p.x > pos.x && p.x < pos.x + w
 				 && p.y > pos.y && p.y < pos.y + h);
 		};
-		WMClass.init({stage: stage});
+		elementFactory.init({stage: stage});
 		layer.add(layer.trash);
 		layer.add(layer.backgroundHitBox);
 		stage.add(layer);
@@ -60,7 +67,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 					var __ps = l.points();
 					__ps[2] = p.x;
 					__ps[3] = p.y;
-					var t = WMClass.getInstanceFromPoint(p);
+					var t = elementFactory.getInstanceFromPoint(p);
 					if(this.lastT){
 						this.lastT.setFill("white");
 					}
@@ -105,7 +112,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 					var p = {
 						x: __ps[2], y: __ps[3]
 					};
-					var t = WMClass.getInstanceFromPoint(p);
+					var t = elementFactory.getInstanceFromPoint(p);
 					if(this.lastT){
 						this.lastT.setFill("white");
 						this.lastT = null;
@@ -195,7 +202,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 				x: centerP["pageX"],
 				y: centerP["pageY"]
 			}, stage);
-			var newClass = WMClass.newInstance({x: p.x, y: p.y});
+			var newClass = elementFactory.newInstance({x: p.x, y: p.y});
 			layer.add(newClass);
 			layer.draw();
 		});
