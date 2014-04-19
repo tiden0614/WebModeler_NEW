@@ -33,21 +33,21 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var maskThis = function(){
         var _this = this;
         var generateInnerInput = function(config){
-            // config = WMUtils.validateConfig({
-            //     top: 0, left: 0, id: 0, value: "", width: 20
-            // });
+            config = WMUtils.validateConfig(config, {
+                top: 0, left: 0, id: 0, value: "", width: 20,
+                fontSize: 12, height: 14
+            });
             var width = new Number(config["width"]) > 20 ?
                                 config["width"] : 20;
             var inputHtml = "<input type='text' value='{v}' "
                           + "data-id='{id}' class='fixed' "
                           + "style='top: {top}px; left: {left}px; "
-                          + "width: {width}px;'>";
+                          + "width: {width}px; height: {height}px;"
+                          + "font-size: {fs}px'>";
             return inputHtml.format({
-                v: config["value"],
-                id: config["id"],
-                top: config["top"],
-                left: config["left"],
-                width: width
+                v: config["value"], id: config["id"], top: config["top"],
+                left: config["left"], width: width, height: config["height"],
+                fs: config["fontSize"]
             });
         };
         var generateAttrPoolContent = function(pool, poolName){
@@ -88,10 +88,29 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         /* 先将mask内div的内容删除 */
         attrPool.html("");
         methPool.html("");
+        classNameDiv.html("");
         /* 调整mask的css样式 */
         var rect = this.WMGetComponent("rect");
         generateAttrPoolContent(this.WMGetComponent("attrPool"), "attr");
         generateAttrPoolContent(this.WMGetComponent("methPool"), "meth");
+        (function(){
+            var className = _this.WMGetComponent("nameText");
+            var classNamePos = getPointOnPage(className.getAbsolutePosition());
+            classNameDiv.css({
+                top: classNamePos.y + 12, left: classNamePos.x, "z-index": 10
+            });
+            var inputObj = $(generateInnerInput({
+                // top: classNamePos.y, left: classNamePos.x,
+                value: className.getText(), width: className.getWidth(),
+                fontSize: className.getFontSize()
+            }));
+            inputObj.on("input", function(){
+                className.setText($(this).val());
+                $(this).css("width", className.getWidth());
+                resetClassWidth.call(_this);
+            });
+            classNameDiv.append(inputObj);
+        })();
         resetClassWidth.call(this);
     };
 
@@ -552,8 +571,10 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             } else {
                 attrPool.html("");
                 methPool.html("");
+                classNameDiv.html("");
                 attrPool.css("z-index", "-10");
                 methPool.css("z-index", "-10");
+                classNameDiv.css("z-index", "-10");
             }
             debugLogger.log(info + " Editable Components of "
                 + this.WMGetIdString());
