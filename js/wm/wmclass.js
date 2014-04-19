@@ -598,10 +598,12 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             }
             var m = "hide";
             var info = "Hidding";
+            var rect = this.WMGetComponent("rect");
             if(this.editable){
                 m = "show";
                 info = "Showing";
                 maskThis.call(this);
+                rect.setFill("lightyellow");
             } else {
                 attrPool.html("");
                 methPool.html("");
@@ -609,6 +611,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                 attrPool.css("z-index", "-10");
                 methPool.css("z-index", "-10");
                 classNameDiv.css("z-index", "-10");
+                rect.setFill("white");
             }
             debugLogger.log(info + " Editable Components of "
                 + this.WMGetIdString());
