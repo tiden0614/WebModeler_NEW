@@ -62,7 +62,12 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             for(var attrId in pool["WMComponents"]){
                 var attr = pool["WMComponents"][attrId];
                 if(attr != null){
-                    /* 不用这个闭包的话会引起问题 */
+                    /*
+                     * 不用这个闭包的话会引起问题
+                     * 因为这个方法是通过markThis.call(this)的方式调用的，
+                     * 所以多个调用者会共用一个闭包，这样在inputObj.on方法
+                     * 中就会出现attrText仅为最后一次调用时的值的情况
+                     */
                     (function(){
                         var attrPos = attr.getPosition();
                         var attrText = attr.WMGetComponent("text");
