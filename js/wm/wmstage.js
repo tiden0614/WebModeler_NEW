@@ -1,4 +1,4 @@
-define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"], 
+define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 		function(Kinetic, WMClass, WMRelation, Hammer, WMUtils){
 	var eventLogger = WMUtils.getLogger({
 		name: "main", level: "EVENT", on: true
@@ -10,7 +10,8 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 	var layer = null;
 	var _init = function(config){
 		stage = new Kinetic.Stage({
-			width: config["width"], height: config["height"], container: config["container"], listening: true
+			width: config["width"], height: config["height"],
+			container: config["container"], listening: true
 		});
 		layer = new Kinetic.Layer();
 		layer.newConnectLineHitBox = new Kinetic.Rect({
@@ -119,6 +120,7 @@ define(["Kinetic", "WMClass", "WMRelation", "Hammer", "WMUtils"],
 						focus.WMToggleComponents(false);
 					}
 				}
+				WMUtils.globalFocus(null);
 			}
 			layer.lineEndDrawingHitBox.remove();
 			layer.draw();

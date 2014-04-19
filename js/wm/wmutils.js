@@ -126,20 +126,26 @@ define(["Kinetic"], function(Kinetic){
             return str.slice(0, str.length - 1) + " }";
         },
         getPointOnStage: function(p, stage){
-            var x = p.x;
-            var y = p.y;
-
 			var bbox = this.box;
 			if(bbox == null){
 				var _c = stage.getContainer();
 				bbox = _c.getBoundingClientRect();
 				this.box = bbox;
 			}
-
-
             return {
-                x: x - bbox.left,
-                y: y - bbox.top
+                x: p.x - bbox.left,
+                y: p.y - bbox.top
+            };
+        },
+        getPointOnPage: function(p, stage){
+            var bbox = this.box;
+            if(bbox == null){
+                this.box = bbox
+                = stage.getContainer().getBoundingClientRect();
+            }
+            return {
+                x: p.x + bbox.left,
+                y: p.y + bbox.top
             };
         },
 		getRotationAngle: function(ps, pe){

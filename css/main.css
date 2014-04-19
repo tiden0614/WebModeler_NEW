@@ -1,0 +1,14 @@
+.fixed, .attr-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#stage {
+    z-index: 0;
+}
+
+.mask {
+    z-index: -10;
+    background: rgba(0, 255, 0, 0.3);
+}

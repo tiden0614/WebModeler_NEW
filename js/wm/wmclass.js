@@ -1,6 +1,5 @@
 define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     function(Kinetic, Hammer, WMGroup, WMUtils, WMRelation){
-    /* 用于产生classId */
     var MAX_VALUE = Number.MAX_VALUE;
     var WMClassIdCount = 0;
     var WMClassMap = {};
@@ -13,12 +12,82 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var eventLogger = WMUtils.getLogger({name: "WMClass", level: "EVENT", on: true});
     var errorLogger = WMUtils.getLogger({name: "WMClass", level: "ERROR", on: true});
     var stage = null;
+    var attrPool = $(".attrPool");
+    var methPool = $(".methPool");
+    var classNameDiv = $(".className");
+
+    var getPointOnPage = function(p){
+        if(stage == null){
+            errorLogger.log("No Stage Specified!");
+        }
+        return WMUtils.getPointOnPage(p, stage);
+    };
 
     var getPointOnStage = function(p){
         if(stage == null){
 			errorLogger.log("No Stage Specified!");
         }
         return WMUtils.getPointOnStage(p, stage);
+    };
+
+    var maskThis = function(){
+        var _this = this;
+        var generateInnerInput = function(config){
+            // config = WMUtils.validateConfig({
+            //     top: 0, left: 0, id: 0, value: "", width: 20
+            // });
+            var width = new Number(config["width"]) > 20 ?
+                                config["width"] : 20;
+            var inputHtml = "<input type='text' value='{v}' "
+                          + "data-id='{id}' class='fixed' "
+                          + "style='top: {top}px; left: {left}px; "
+                          + "width: {width}px;'>";
+            return inputHtml.format({
+                v: config["value"],
+                id: config["id"],
+                top: config["top"],
+                left: config["left"],
+                width: width
+            });
+        };
+        var generateAttrPoolContent = function(pool, poolName){
+            var poolPos = getPointOnPage(pool.getAbsolutePosition());
+            var poolDom = attrPool;
+            if(poolName == "meth"){
+                poolDom = methPool;
+            }
+            poolDom.css({
+                top: poolPos.y, left: poolPos.x, "z-index": 10
+            });
+            for(var attrId in pool["WMComponents"]){
+                var attr = pool["WMComponents"][attrId];
+                if(attr != null){
+                    /* 不用这个闭包的话会引起问题 */
+                    (function(){
+                        var attrPos = attr.getPosition();
+                        var attrText = attr.WMGetComponent("text");
+                        var inputObj = $(generateInnerInput({
+                            top: attrPos.y, left: attrPos.x, id: attr.id,
+                            value: attrText.getText(), width: attrText.getWidth()
+                        }));
+                        inputObj.on("input", function(){
+                            attrText.setText($(this).val());
+                            $(this).css("width", attrText.getWidth());
+                            resetClassWidth.call(_this);
+                        });
+                        poolDom.append(inputObj);
+                    })();
+                }
+            }
+        };
+        /* 先将mask内div的内容删除 */
+        attrPool.html("");
+        methPool.html("");
+        /* 调整mask的css样式 */
+        var rect = this.WMGetComponent("rect");
+        generateAttrPoolContent(this.WMGetComponent("attrPool"), "attr");
+        generateAttrPoolContent(this.WMGetComponent("methPool"), "meth");
+        resetClassWidth.call(this);
     };
 
     /* 生成Class的初始显示组件 */
@@ -104,7 +173,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 				e.preventDefault();
 				eventLogger.log("TOUCHMOVE on " + this.WMGetIdString()
 					+ ", touches: " + e.touches.length);
-				var p = getPointOnStage({x: e.touches[0]["pageX"], y: e.touches[0]["pageY"] });
+				var p = getPointOnStage({
+                    x: e.touches[0]["pageX"], y: e.touches[0]["pageY"]
+                });
                 /* 当手指向某一方向移动超过15px时，将长按标记置为否 */
 				if(this.holdStart){
 					var hP = this.holdPoint;
@@ -123,7 +194,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 					this.move(moveP);
 					this.getLayer().batchDraw();
                 /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
-				} else if (e.touches.length == 2 && !this.editable 
+				} else if (e.touches.length == 2 && !this.editable
 						&& !this.longPressConnect && this.gestureCreated){
 					eventLogger.log("DRAGGING on Gesture Created "
 							+ this.WMGetIdString() + ", p:"
@@ -157,7 +228,8 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 					var self = this;
 					if(e.touches.length == 1 && !this.editable){
 						setTimeout(function(){
-							if(self.holdStart && !self.longPressConnect && !self.editable){
+							if(self.holdStart && !self.longPressConnect
+                                && !self.editable){
 								eventLogger.log("1 TOUCH HOLD on"
 									+ self.WMGetIdString());
 								self.longPressConnect = true;
@@ -217,10 +289,6 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             fontSize: 12, fontFamily: "Calibri",
             fill: "#555", padding: 5, align: "left"
         });
-        var hitBox = new Kinetic.Rect({
-            x: 0, y: 0, width: text.getWidth(), height: attrHeight,
-            opacity: 0.5, fill: "lightyellow"
-        });
         var remove = WMUtils.getImage({
             x: -15, y: 3, width: 16, height: 16,
             src: "icons/remove-icon.png"
@@ -228,7 +296,6 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         //attr.id = config["id"];
         attr.WMAttrType = config["WMAttrType"];
         attr.WMAddComponent(text, "text");
-        attr.WMAddComponent(hitBox, "hitBox");
         attr.WMAddComponent(remove, "remove");
         attr.WMGetText = function(){
             return text.getText();
@@ -296,7 +363,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         this.WMGetComponent("methPool").move(moveParam);
         this.WMGetComponent("attrAdder").move(moveParam);
         this.WMGetComponent("methAdder").move(moveParam);
-        resetClassWidth.call(this);
+        maskThis.call(this);
     };
 
     var addMeth = function(c){
@@ -312,7 +379,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         rect.setHeight(rect.getHeight() + attrHeight);
         var moveParam = {x: 0, y: attrHeight};
         this.WMGetComponent("methAdder").move(moveParam);
-        resetClassWidth.call(this);
+        maskThis.call(this);
     };
 
     var removeAttr = function(poolName, id){
@@ -351,7 +418,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                 }
             });
         }
-        resetClassWidth.call(this);
+        maskThis.call(this);
     };
 
     /**
@@ -444,19 +511,14 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         var _id = WMClassIdCount++;
         config = WMUtils.validateConfig(config, {
             x: 0, y: 0, width: defaultWidth, height: defaultHeight,
-            name: "NewClass" + _id, editable: false, gestureCreated: false
+            name: "NewClass" + _id, editable: false,
+            gestureCreated: false
         });
         var group = generateNewWMClassInnerComponents(config);
         WMClassMap["" + _id] = group;
 
         group.WMGetClosestPoint = function(point){
             var p = getClosestConnectPoint.call(this, point);
-			/*
-            debugLogger.log("For point: " + WMUtils.getObjectStr(point)
-                + " Got THE Closest Connector: "
-                + WMUtils.getObjectStr(p)
-                + " of " + this.WMGetIdString());
-			 */
             return p;
         };
 
@@ -481,6 +543,12 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             if(this.editable){
                 m = "show";
                 info = "Showing";
+                maskThis.call(this);
+            } else {
+                attrPool.html("");
+                methPool.html("");
+                attrPool.css("z-index", "-10");
+                methPool.css("z-index", "-10");
             }
             debugLogger.log(info + " Editable Components of "
                 + this.WMGetIdString());
@@ -509,7 +577,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                 WMAttrType: "meth"
             });
         });
-		
+
 		group.insideThis = function(p){
 			var inside = false;
 			var rect = this.WMGetComponent("rect");

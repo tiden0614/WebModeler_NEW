@@ -2,6 +2,7 @@ require.config({
     baseUrl: "js",
 	urlArgs: "bust=" + new Date().getTime(),
     paths: {
+        //jQuery: "lib/jquery-1.8.3.min"
         Kinetic: "lib/kinetic-v5.0.2.min",
         // Kinetic: "lib/kinetic-v4.3.3",
         Hammer: "lib/hammer.min",
@@ -9,7 +10,7 @@ require.config({
         WMGroup: "wm/wmgroup",
         WMRelation: "wm/wmrelation",
         WMStage: "wm/wmstage",
-        WMClass: "wm/wmclass"
+        WMClass: "wm/wmclass",
     }
 });
 require(["WMClass", "WMStage"], function(WMClass, WMStage){
