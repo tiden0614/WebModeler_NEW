@@ -35,7 +35,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         var generateInnerInput = function(config){
             config = WMUtils.validateConfig(config, {
                 top: 0, left: 0, id: 0, value: "", width: 20,
-                fontSize: 12, height: 14
+                fontSize: 12, height: 18
             });
             var width = new Number(config["width"]) > 20 ?
                                 config["width"] : 20;
@@ -73,7 +73,8 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                         var attrText = attr.WMGetComponent("text");
                         var inputObj = $(generateInnerInput({
                             top: attrPos.y, left: attrPos.x, id: attr.id,
-                            value: attrText.getText(), width: attrText.getWidth()
+                            value: attrText.getText(), fontSize: 11,
+                            width: attrText.getWidth() + 5
                         }));
                         inputObj.on("input", function(){
                             attrText.setText($(this).val());
@@ -102,8 +103,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             });
             var inputObj = $(generateInnerInput({
                 value: className.getText(),
-                width: className.getWidth() - 30,
-                fontSize: className.getFontSize()
+                width: className.getWidth() - 23,
+                // fontSize: className.getFontSize()
+                fontSize: 14, height: 23
             }));
             inputObj.on("input", function(){
                 var cnp = getPointOnPage(className.getAbsolutePosition());

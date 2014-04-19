@@ -193,17 +193,21 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 		globalDrawingHitBoxHammer.on("touchstart", onDrawingTouchStart);
 		globalDrawingHitBoxHammer.on("touchmove", onDrawingTouchMove);
 		globalDrawingHitBoxHammer.on("release", function(e){
-			var rResult = WMUtils.recognizeTrack([this.lineTrackPoints]);
-			debugLogger.log("Recognized Global Shape: " + rResult.Name);
+			if(this.lineTrackPoints && this.lineTrackPoints.length > 10){
+				var rResult = WMUtils.recognizeTrack([this.lineTrackPoints]);
+				debugLogger.log("Recognized Global Shape: " + rResult.Name);
+				var centerP = e["gesture"]["center"];
+				var p = WMUtils.getPointOnStage({
+					x: centerP["pageX"],
+					y: centerP["pageY"]
+				}, stage);
+				var newClass = elementFactory.newInstance({
+					x: p.x, y: p.y, shape: rResult.Name
+				});
+				layer.add(newClass);
+			}
 			this.lineTrack.remove();
 			this.remove();
-			var centerP = e["gesture"]["center"];
-			var p = WMUtils.getPointOnStage({
-				x: centerP["pageX"],
-				y: centerP["pageY"]
-			}, stage);
-			var newClass = elementFactory.newInstance({x: p.x, y: p.y});
-			layer.add(newClass);
 			layer.draw();
 		});
 	};

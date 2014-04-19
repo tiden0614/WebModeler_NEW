@@ -1,4 +1,10 @@
-.fixed, .attr-input {
+.relative {
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.fixed{
     position: absolute;
     top: 0;
     left: 0;
@@ -6,6 +12,7 @@
 
 #stage {
     z-index: 0;
+    top: 40px;
 }
 
 .mask {
