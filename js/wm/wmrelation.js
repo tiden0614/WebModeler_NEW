@@ -1,5 +1,5 @@
-define(["Kinetic", "Hammer", "WMUtils", "WMGroup", "WMClass"],
-		function(Kinetic, Hammer, WMUtils, WMGroup, WMClass){
+define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
+		function(Kinetic, Hammer, WMUtils, WMGroup){
 	var debugLogger = WMUtils.getLogger({name: "WMRelation", level: "DEBUG"});
 	var eventLogger = WMUtils.getLogger({name: "WMRelation", level: "EVENT"});
 	var errorLogger = WMUtils.getLogger({name: "WMRelation", level: "ERROR"});

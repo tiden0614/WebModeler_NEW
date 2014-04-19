@@ -223,9 +223,11 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 					};
 					this.move(moveP);
                     if(this.WMIsInsideTrash()){
-                        rect.setFill("red");
+                        rect.setFill("grey");
+                        rect.setOpacity(0.6);
                     } else {
                         rect.setFill("white");
+                        rect.setOpacity(1);
                     }
 					this.getLayer().batchDraw();
                 /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
