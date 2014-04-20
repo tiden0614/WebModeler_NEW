@@ -166,14 +166,14 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 				var text = this.WMGetComponent("nameText");
 				if(_layer){
 					if(this.editable){
-						var relationFocus = _layer.relationFocus;
+						var relationFocus = WMUtils.globalFocus();
 						if(relationFocus && relationFocus.editable &&
 							relationFocus != this){
 							if(typeof(relationFocus.WMToggleComponents) == "function"){
 								relationFocus.WMToggleComponents(false);
 							}
 						}
-						_layer.relationFocus = this;
+						WMUtils.globalFocus(this);
 						relNameMask.css({
 							top: text.getY(), left: text.getX(),
 							"z-index": 10
@@ -201,7 +201,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 							"z-index": -10
 						});
 						relNameMask.html("");
-						_layer.relationFocus = null;
+						WMUtils.globalFocus(null);
 						this.WMGetComponent("removeBox").hide();
 						_layer.draw();
 					}
