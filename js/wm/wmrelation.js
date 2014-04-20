@@ -10,7 +10,8 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 		debugLogger.log("Creating New Relation");
 		config = WMUtils.validateConfig(config, {
 			start: null, end: null, text: "New Relation " + WMRelationIdCount,
-			type: "inherit"
+			type: "inherit", lineHeadImgSrc: "icons/blank.png",
+			lineTailImgSrc: "icons/blank.png"
 		});
 		var startObj = config["start"], endObj = config["end"];
 		if(startObj == null || endObj == null){
@@ -35,13 +36,13 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			opcity: 0.5, fill: "lightyellow"
 		});
 		var lineHead = WMUtils.getImage({
-			x: eP.x, y: eP.y, width: 16, height: 16,
-			src: "icons/inherit-arrow.png", offset: {x: 8, y: 0},
+			x: eP.x, y: eP.y, width: 16, height: 16, offset: {x: 8, y: 0},
+			src: config["lineHeadImgSrc"],
 			rotation: WMUtils.getRotationAngle(sP, eP)
 		});
 		var lineTail = WMUtils.getImage({
-			x: sP.x, y: sP.y, width: 16, height: 16,
-			src: "icons/blank.png", offset: {x: 8, y: 0},
+			x: sP.x, y: sP.y, width: 16, height: 16, offset: {x: 8, y: 0},
+			src: config["lineTailImgSrc"],
 			rotation: 180 + WMUtils.getRotationAngle(sP, eP)
 		});
 		var lineHeadHitBox = new Kinetic.Rect({

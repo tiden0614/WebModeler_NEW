@@ -7,9 +7,11 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var WMRelationStorage = [];
     var attrHeight = 20;
     var defaultUserWidth = 120;
-    var defaultUserHeight = 200;
+    var defaultUserHeight = 165;
     var defaultUsecaseWidth = 200;
     var defaultUsecaseHeight = 80;
+    var defaultLineHeadImgSrc = "icons/blank.png";
+    var defaultLineTailImgSrc = "icons/blank.png";
     var debugLogger = WMUtils.getLogger({name: "WMClass", level: "DEBUG", on: true});
     var eventLogger = WMUtils.getLogger({name: "WMClass", level: "EVENT", on: true});
     var errorLogger = WMUtils.getLogger({name: "WMClass", level: "ERROR", on: true});
@@ -251,7 +253,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             x: 0, y: 0, width: defaultUsecaseWidth, height: defaultUsecaseHeight,
             editable: false, gestureCreated: false, shape: "D"
         });
-        var groupGen = shapeGeneratorMap[config["shape"]];
+        var _shape = config["shape"];
+        delete config["shape"];
+        var groupGen = shapeGeneratorMap[shape];
         if(groupGen == null){
             groupGen = generateNewWMUsecaseInnerComponents;
         }
@@ -431,6 +435,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                                 self.holdPoint.x, self.holdPoint.y],
                                 stroke: "black", strokeWidth: 2
                             });
+                            self.WMGetComponent("rect").setFill("lightblue");
                             var __layer = self.getLayer();
                             WMUtils.globalFocus(self);
                             __layer.add(self.longPressConnectLine);
@@ -468,8 +473,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         return group;
     };
 
-    var getInstanceFromPoint = function(p){
-        stagePoint = getPointOnStage(p);
+    var getInstanceFromPoint = function(stagePoint){
         hitClass = null;
         for(var i = 0; i < WMClassStorage.length; i++){
             var wmclass = WMClassStorage[i];
@@ -498,6 +502,12 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         },
         getInstanceFromPoint: function(p){
             return getInstanceFromPoint(p);
+        },
+        getDefaultLineHeadImgSrc: function(){
+            return defaultLineHeadImgSrc;
+        },
+        getDefaultLineTailImgSrc: function(){
+            return defaultLineTailImgSrc;
         }
     };
  });

@@ -24,15 +24,15 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 			layer = new Kinetic.Layer();
 			layer.newConnectLineHitBox = new Kinetic.Rect({
 				x: 0, y: 0, width: config["width"], height: config["height"],
-				fill: "lightyellow", opacity: 0.3
+				fill: "lightyellow", opacity: 0
 			});
 			layer.lineEndDrawingHitBox = new Kinetic.Rect({
 				x: 0, y: 0, width: 200, height: 200,
-				fill: "lightblue", opacity: 0.3
+				fill: "red", opacity: 0.3
 			});
 			layer.globalDrawingHitBox = new Kinetic.Rect({
 				x: 0, y: 0, width: config["width"], height: config["height"],
-				fill: "lightblue", opacity: 0.3
+				fill: "red", opacity: 0.3
 			});
 			layer.backgroundHitBox = new Kinetic.Rect({
 				x: 0, y: 0, width: config["width"], height: config["height"],
@@ -119,7 +119,12 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 							this.lastT = null;
 						}
 						if(t != null && t != f){
-							WMRelation.connect({"start": f, "end": t});
+							var dLHIS = elementFactory.getDefaultLineHeadImgSrc();
+							var dLTIS = elementFactory.getDefaultLineTailImgSrc();
+							WMRelation.connect({
+								start: f, end: t,
+								lineHeadImgSrc: dLHIS, lineTailImgSrc: dLTIS
+							});
 							t.WMGetComponent("rect").setFill("white");
 							eventLogger.log("Found t " + t.WMGetIdString());
 						}

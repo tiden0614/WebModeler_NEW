@@ -3,11 +3,15 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var MAX_VALUE = Number.MAX_VALUE;
     var WMClassIdCount = 0;
     var WMClassMap = {};
-	var WMClassStorage = [];
-	var WMRelationStorage = [];
+    var WMClassStorage = [];
+    var WMRelationStorage = [];
     var attrHeight = 20;
-    var defaultWidth = 200;
-    var defaultHeight = 80;
+    var defaultClassWidth = 200;
+    var defaultClassHeight = 80;
+    var defaultInterfaceWidth = 200;
+    var defaultInterfaceHeight = 60;
+    var defaultLineHeadImgSrc = "icons/blank.png";
+    var defaultLineTailImgSrc = "icons/blank.png";
     var debugLogger = WMUtils.getLogger({name: "WMClass", level: "DEBUG", on: true});
     var eventLogger = WMUtils.getLogger({name: "WMClass", level: "EVENT", on: true});
     var errorLogger = WMUtils.getLogger({name: "WMClass", level: "ERROR", on: true});
@@ -20,6 +24,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         X: "icons/rhombus.png",
         line: "icons/blank.png"
     };
+    var shapeGeneratorMap = {};
 
     var getPointOnPage = function(p){
         if(stage == null){
@@ -30,7 +35,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 
     var getPointOnStage = function(p){
         if(stage == null){
-			errorLogger.log("No Stage Specified!");
+            errorLogger.log("No Stage Specified!");
         }
         return WMUtils.getPointOnStage(p, stage);
     };
@@ -128,7 +133,13 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     };
 
     /* 生成Class的初始显示组件 */
-    var generateNewWMClassInnerComponents = function(config){
+    var generateNewWMClassInnerComponents = shapeGeneratorMap["D"] =
+    function(config){
+        var _id = WMClassIdCount++;
+        config = WMUtils.validateConfig(config, {
+            x: 0, y: 0, name: "NewClass" + _id,
+            width: defaultClassWidth, height: defaultClassHeight
+        });
         debugLogger.log("Constructing new WMClass: " + WMUtils.getObjectStr(config));
         var group = new WMGroup.newInstance({
             x: config["x"], y: config["y"]
@@ -170,149 +181,83 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 
         /* 设置一些初始化动作 */
         (function(){
-			group.WMAddComponent(rect, "rect");
-			group.WMAddComponent(nameText, "nameText");
-			group.WMAddComponent(nameSeparator, "nameSeparator");
-			group.WMAddComponent(attrSeparator, "attrSeparator");
-			group.WMAddComponent(attrAdder, "attrAdder");
-			group.WMAddComponent(methAdder, "methAdder");
-			group.WMAddComponent(attrPool, "attrPool");
-			group.WMAddComponent(methPool, "methPool");
-			nameText.setX(config["width"] / 2 - nameText.getWidth() / 2);
-			group.attrIdCount = 0;
-			group.methIdCount = 0;
-			group.attrInsertY = 0;
-			group.methInsertY = 0;
-			group.maxAttrWidth = config["width"];
-			//group.id = config["id"];
-			group.editable = false;
-			group.gestureCreated = config["gestureCreated"];
-			group.holdStart = false;
-			group.holdPoint = {x: 0, y: 0};
-			group.longPressConnect = false;
-			group.toggleComponents = [attrAdder, methAdder];
-			var hammer = new Hammer(group);
-			hammer.on("dbltap", function(){
-				eventLogger.log("Double Tapped " + this.WMGetIdString());
-				this.holdStart = false;
-				if(!this.gestureCreated && !this.editable){
-					var focus = WMUtils.globalFocus();
-					if(focus != this){
-						if(focus && typeof(focus.WMToggleComponents) == "function"){
-							focus.WMToggleComponents(false);
-						}
-						this.WMToggleComponents(true);
-						WMUtils.globalFocus(this);
-					}
-				}
-			});
-			hammer.on("touchmove", function(e){
-				e.preventDefault();
-				eventLogger.log("TOUCHMOVE on " + this.WMGetIdString()
-					+ ", touches: " + e.touches.length);
-				var p = getPointOnStage({
-                    x: e.touches[0]["pageX"], y: e.touches[0]["pageY"]
-                });
-                /* 当手指向某一方向移动超过15px时，将长按标记置为否 */
-				if(this.holdStart){
-					var hP = this.holdPoint;
-					if(Math.abs(p.x - hP.x) > 15 && Math.abs(p.y - hP.y) > 15){
-						this.holdStart = false;
-                    }
-				}
-				if(e.touches.length == 1 && !this.editable && !this.longPressConnect){
-					eventLogger.log("DRAGGING on " + this.WMGetIdString()
-						+ ", p: " + WMUtils.getObjectStr(p));
-					var rect = this.WMGetComponent("rect");
-					var moveP = {
-						x: p.x - this.getX() - rect.getWidth() / 2,
-				        y: p.y - this.getY() - rect.getHeight() / 2
-					};
-					this.move(moveP);
-                    if(this.WMIsInsideTrash()){
-                        rect.setFill("grey");
-                        rect.setOpacity(0.6);
-                    } else {
-                        rect.setFill("white");
-                        rect.setOpacity(1);
-                    }
-					this.getLayer().batchDraw();
-                /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
-				} else if (e.touches.length == 2 && !this.editable
-						&& !this.longPressConnect && this.gestureCreated){
-					eventLogger.log("DRAGGING on Gesture Created "
-							+ this.WMGetIdString() + ", p:"
-							+ WMUtils.getObjectStr(p));
-					var rect = this.WMGetComponent("rect");
-					eventLogger.log("DRAGGING on " + this.WMGetIdString()
-							+ ", p: " + WMUtils.getObjectStr(p));
-					var moveP = {
-						x: p.x - this.getX() - rect.getWidth() / 2,
-						y: p.y - this.getY() - rect.getHeight() / 2
-					};
-					this.move(moveP);
-					this.getLayer().newConnectLineHitBox.remove();
-					this.getLayer().batchDraw();
-				}
-			});
-			hammer.on("touchend", function(){
-				eventLogger.log("TOUCHEND on " + this.WMGetIdString());
-				this.gestureCreated = false;
-				this.holdStart = false;
-                if(this.WMIsInsideTrash()){
-                    this.destroy();
-                }
-			});
-			hammer.on("touchstart", function(e){
-				e.preventDefault();
-				if(!this.gestureCreated){
-					eventLogger.log("TOUCHSTART on " + this.WMGetIdString());
-					this.holdStart = true;
-					this.holdPoint = getPointOnStage({
-						x: e.touches[0]["pageX"],
-						y: e.touches[0]["pageY"]
-					});
-					var self = this;
-					if(e.touches.length == 1 && !this.editable){
-						setTimeout(function(){
-							if(self.holdStart && !self.longPressConnect
-                                && !self.editable){
-								eventLogger.log("1 TOUCH HOLD on"
-									+ self.WMGetIdString());
-								self.longPressConnect = true;
-								self.longPressConnectLine = new Kinetic.Line({
-									points: [self.holdPoint.x, self.holdPoint.y,
-									self.holdPoint.x, self.holdPoint.y],
-									stroke: "black", strokeWidth: 2
-								});
-								var __layer = self.getLayer();
-								WMUtils.globalFocus(self);
-								__layer.add(self.longPressConnectLine);
-								__layer.add(__layer.newConnectLineHitBox);
-								self.getLayer().draw();
-							}
-						}, 800);
-					} else if(e.touches.length > 1 && !this.editable){
-						setTimeout(function(){
-							if(self.holdStart && !self.editable){
-								eventLogger.log("2 TOUCHES HOLD on "
-									+ self.WMGetIdString());
-								self.holdStart = false;
-								self.longPressConnect = false;
-								var _newClass = newInstance({
-									x: self.holdPoint["x"] - defaultWidth / 2,
-									y: self.holdPoint["y"] - defaultHeight / 2,
-									editable: false, gestureCreated: true
-								});
-								WMRelation.connect({start: _newClass, end: self});
-								self.getLayer().add(_newClass);
-								self.getLayer().newConnectLineHitBox.remove();
-								self.getLayer().draw();
-							}
-						}, 400);
-					}
-				}
-			});
+            group.WMAddComponent(rect, "rect");
+            group.WMAddComponent(nameText, "nameText");
+            group.WMAddComponent(nameSeparator, "nameSeparator");
+            group.WMAddComponent(attrSeparator, "attrSeparator");
+            group.WMAddComponent(attrAdder, "attrAdder");
+            group.WMAddComponent(methAdder, "methAdder");
+            group.WMAddComponent(attrPool, "attrPool");
+            group.WMAddComponent(methPool, "methPool");
+            nameText.setX(config["width"] / 2 - nameText.getWidth() / 2);
+            group.toggleComponents = [attrAdder, methAdder];
+            WMClassMap["" + _id] = group;
+        })();
+        return group;
+    };
+
+    /* 生成Interface的初始显示组件 */
+    var generateNewWMInterfaceInnerComponents = shapeGeneratorMap["H"] =
+    function(config){
+        var _id = WMClassIdCount++;
+        config = WMUtils.validateConfig(config, {
+            x: 0, y: 0, name: "NewInterface" + _id,
+            width: defaultInterfaceWidth, height: defaultInterfaceHeight,
+        });
+        debugLogger.log("Constructing new WMClass: " + WMUtils.getObjectStr(config));
+        var group = new WMGroup.newInstance({
+            x: config["x"], y: config["y"]
+        });
+        var rect = new Kinetic.Rect({
+            x: 0, y: 0,
+            width: config["width"], height: config["height"],
+            stroke: "black", strokewidth: 1, fill: "white",
+            shadowcolor: "black", shadowblur: 10,
+            shadowoffset: [4, 4], shadowopacity: 0.2
+        });
+        var nameText = new Kinetic.Text({
+            x: 0, y: -10, text: config["name"], listening: false,
+            fontSize: 16, fontFamily: "Calibri",
+            fill: "#555", padding: 20, align: "center"
+        });
+        var nameSeparator = new Kinetic.Line({
+            points: [1, 30, config["width"] - 1, 30],
+            stroke: "black", strokeWidth: 1
+        });
+        var attrSeparator = new Kinetic.Line({
+            points: [1, 55, config["width"] - 1, 55],
+            stroke: "black", strokeWidth: 1
+        });
+        var attrAdder = WMUtils.getImage({
+            x: 15, y: 35, width: 16, height: 16,
+            src: "icons/adder-icon.png"
+        });
+        var methAdder = WMUtils.getImage({
+            x: 15, y: 40, width: 16, height: 16,
+            src: "icons/adder-icon.png"
+        });
+        var attrPool = WMGroup.newInstance({
+            x: 15, y: 35
+        });
+        var methPool = WMGroup.newInstance({
+            x: 15, y: 40
+        });
+
+        /* 设置一些初始化动作 */
+        (function(){
+            group.WMAddComponent(rect, "rect");
+            group.WMAddComponent(nameText, "nameText");
+            group.WMAddComponent(nameSeparator, "nameSeparator");
+            group.WMAddComponent(attrSeparator, "attrSeparator");
+            group.WMAddComponent(attrAdder, "attrAdder");
+            group.WMAddComponent(methAdder, "methAdder");
+            group.WMAddComponent(attrPool, "attrPool");
+            group.WMAddComponent(methPool, "methPool");
+            nameText.setX(config["width"] / 2 - nameText.getWidth() / 2);
+            group.toggleComponents = [methAdder];
+            attrAdder.hide();
+            attrSeparator.hide();
+            WMClassMap["" + _id] = group;
         })();
         return group;
     };
@@ -379,7 +324,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         var attrPool = this.WMGetComponent("attrPool");
         var methPool = this.WMGetComponent("methPool");
         var rect = this.WMGetComponent("rect");
-        var width = defaultWidth;
+        var width = defaultClassWidth;
         var thisWidth = rect.getWidth();
         attrPool.WMEachComponent(function(){
             width = Math.max(width, 25 + this.WMGetAttrWidth());
@@ -388,7 +333,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             width = Math.max(width, 25 + this.WMGetAttrWidth());
         });
         setClassWidth.call(this, width);
-		WMRelation.refreshRelationsByObj(this);
+        WMRelation.refreshRelationsByObj(this);
         if(this.getLayer() != null){
             this.getLayer().draw();
         }
@@ -555,14 +500,16 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 
     var newInstance = function(config){
         /* 配置默认参数 */
-        var _id = WMClassIdCount++;
         config = WMUtils.validateConfig(config, {
-            x: 0, y: 0, width: defaultWidth, height: defaultHeight,
-            name: "NewClass" + _id, editable: false,
-            gestureCreated: false
+            editable: false, gestureCreated: false, shape: "D"
         });
-        var group = generateNewWMClassInnerComponents(config);
-        WMClassMap["" + _id] = group;
+        var _shape = config["shape"];
+        delete config["shape"];
+        var groupGen = shapeGeneratorMap[_shape];
+        if(groupGen == null){
+            groupGen = generateNewWMClassInnerComponents;
+        }
+        var group = groupGen(config);
 
         group.WMGetClosestPoint = function(point){
             var p = getClosestConnectPoint.call(this, point);
@@ -575,11 +522,11 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             return "WMClass { id: " + this.id + " }";
         };
 
-		var oriMove = group.move;
-		group.move = function(p){
-			WMRelation.refreshRelationsByObj(this);
-			oriMove.call(this, p);
-		};
+        var oriMove = group.move;
+        group.move = function(p){
+            WMRelation.refreshRelationsByObj(this);
+            oriMove.call(this, p);
+        };
 
         var oriDest = group.destroy;
         group.destroy = function(){
@@ -650,56 +597,199 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             });
         });
 
-		group.insideThis = function(p){
-			var inside = false;
-			var rect = this.WMGetComponent("rect");
-			var w = rect.getWidth(), h = rect.getHeight();
-			var _p = this.getAbsolutePosition();
-			if(p.x >= _p.x && p.x <= _p.x + w
-				&& p.y >= _p.y && p.y <= _p.y + h){
-				inside = true;
-			}
-			return inside;
-		};
+        group.insideThis = function(p){
+            var inside = false;
+            var rect = this.WMGetComponent("rect");
+            var w = rect.getWidth(), h = rect.getHeight();
+            var _p = this.getAbsolutePosition();
+            if(p.x >= _p.x && p.x <= _p.x + w
+                && p.y >= _p.y && p.y <= _p.y + h){
+                inside = true;
+            }
+            return inside;
+        };
 
         (function(){
             group.WMToggleComponents(config["editable"]);
+            group.attrIdCount = 0;
+            group.methIdCount = 0;
+            group.attrInsertY = 0;
+            group.methInsertY = 0;
+            group.maxAttrWidth = config["width"];
+            //group.id = config["id"];
+            group.editable = false;
+            group.gestureCreated = config["gestureCreated"];
+            group.holdStart = false;
+            group.holdPoint = {x: 0, y: 0};
+            group.longPressConnect = false;
+            var hammer = new Hammer(group);
+            hammer.on("dbltap", function(){
+                eventLogger.log("Double Tapped " + this.WMGetIdString());
+                this.holdStart = false;
+                if(!this.gestureCreated && !this.editable){
+                    var focus = WMUtils.globalFocus();
+                    if(focus != this){
+                        if(focus && typeof(focus.WMToggleComponents) == "function"){
+                            focus.WMToggleComponents(false);
+                        }
+                        this.WMToggleComponents(true);
+                        WMUtils.globalFocus(this);
+                    }
+                }
+            });
+            hammer.on("touchmove", function(e){
+                e.preventDefault();
+                eventLogger.log("TOUCHMOVE on " + this.WMGetIdString()
+                    + ", touches: " + e.touches.length);
+                var p = getPointOnStage({
+                    x: e.touches[0]["pageX"], y: e.touches[0]["pageY"]
+                });
+                /* 当手指向某一方向移动超过15px时，将长按标记置为否 */
+                if(this.holdStart){
+                    var hP = this.holdPoint;
+                    if(Math.abs(p.x - hP.x) > 15 && Math.abs(p.y - hP.y) > 15){
+                        this.holdStart = false;
+                    }
+                }
+                if(e.touches.length == 1 && !this.editable && !this.longPressConnect){
+                    eventLogger.log("DRAGGING on " + this.WMGetIdString()
+                        + ", p: " + WMUtils.getObjectStr(p));
+                    var rect = this.WMGetComponent("rect");
+                    var moveP = {
+                        x: p.x - this.getX() - rect.getWidth() / 2,
+                        y: p.y - this.getY() - rect.getHeight() / 2
+                    };
+                    this.move(moveP);
+                    if(this.WMIsInsideTrash()){
+                        rect.setFill("grey");
+                        rect.setOpacity(0.6);
+                    } else {
+                        rect.setFill("white");
+                        rect.setOpacity(1);
+                    }
+                    this.getLayer().batchDraw();
+                /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
+                } else if (e.touches.length == 2 && !this.editable
+                        && !this.longPressConnect && this.gestureCreated){
+                    eventLogger.log("DRAGGING on Gesture Created "
+                            + this.WMGetIdString() + ", p:"
+                            + WMUtils.getObjectStr(p));
+                    var rect = this.WMGetComponent("rect");
+                    eventLogger.log("DRAGGING on " + this.WMGetIdString()
+                            + ", p: " + WMUtils.getObjectStr(p));
+                    var moveP = {
+                        x: p.x - this.getX() - rect.getWidth() / 2,
+                        y: p.y - this.getY() - rect.getHeight() / 2
+                    };
+                    this.move(moveP);
+                    this.getLayer().newConnectLineHitBox.remove();
+                    this.getLayer().batchDraw();
+                }
+            });
+            hammer.on("touchend", function(){
+                eventLogger.log("TOUCHEND on " + this.WMGetIdString());
+                this.gestureCreated = false;
+                this.holdStart = false;
+                if(this.WMIsInsideTrash()){
+                    this.destroy();
+                }
+            });
+            hammer.on("touchstart", function(e){
+                e.preventDefault();
+                if(!this.gestureCreated){
+                    eventLogger.log("TOUCHSTART on " + this.WMGetIdString());
+                    this.holdStart = true;
+                    this.holdPoint = getPointOnStage({
+                        x: e.touches[0]["pageX"],
+                        y: e.touches[0]["pageY"]
+                    });
+                    var self = this;
+                    if(e.touches.length == 1 && !this.editable){
+                        setTimeout(function(){
+                            if(self.holdStart && !self.longPressConnect
+                                && !self.editable){
+                                eventLogger.log("1 TOUCH HOLD on"
+                                    + self.WMGetIdString());
+                                self.longPressConnect = true;
+                                self.longPressConnectLine = new Kinetic.Line({
+                                    points: [self.holdPoint.x, self.holdPoint.y,
+                                    self.holdPoint.x, self.holdPoint.y],
+                                    stroke: "black", strokeWidth: 2
+                                });
+                                self.WMGetComponent("rect").setFill("lightblue");
+                                var __layer = self.getLayer();
+                                WMUtils.globalFocus(self);
+                                __layer.add(self.longPressConnectLine);
+                                __layer.add(__layer.newConnectLineHitBox);
+                                self.getLayer().draw();
+                            }
+                        }, 800);
+                    } else if(e.touches.length > 1 && !this.editable){
+                        setTimeout(function(){
+                            if(self.holdStart && !self.editable){
+                                eventLogger.log("2 TOUCHES HOLD on "
+                                    + self.WMGetIdString());
+                                self.holdStart = false;
+                                self.longPressConnect = false;
+                                var _newClass = newInstance({
+                                    x: self.holdPoint["x"] - defaultClassWidth / 2,
+                                    y: self.holdPoint["y"] - defaultClassHeight / 2,
+                                    editable: false, gestureCreated: true
+                                });
+                                WMRelation.connect({
+                                    start: _newClass, end: self,
+                                    lineHeadImgSrc: defaultLineHeadImgSrc,
+                                    lineTailImgSrc: defaultLineTailImgSrc
+                                });
+                                self.getLayer().add(_newClass);
+                                self.getLayer().newConnectLineHitBox.remove();
+                                self.getLayer().draw();
+                            }
+                        }, 400);
+                    }
+                }
+            });
         })();
 
-		WMClassStorage.push(group);
+        WMClassStorage.push(group);
         return group;
     };
 
-	var getInstanceFromPoint = function(p){
-		stagePoint = getPointOnStage(p);
-		hitClass = null;
-		for(var i = 0; i < WMClassStorage.length; i++){
-			var wmclass = WMClassStorage[i];
-			if(wmclass.insideThis(stagePoint)){
-				if(hitClass == null){
-					hitClass = wmclass;
-				} else {
-					if(wmclass.getZIndex() > hitClass.getZIndex()){
-						hitClass = wmclass;
-					}
-				}
-			}
-		}
-		return hitClass;
-	};
+    var getInstanceFromPoint = function(stagePoint){
+        hitClass = null;
+        for(var i = 0; i < WMClassStorage.length; i++){
+            var wmclass = WMClassStorage[i];
+            if(wmclass.insideThis(stagePoint)){
+                if(hitClass == null){
+                    hitClass = wmclass;
+                } else {
+                    if(wmclass.getZIndex() > hitClass.getZIndex()){
+                        hitClass = wmclass;
+                    }
+                }
+            }
+        }
+        return hitClass;
+    };
 
     return {
-		init: function(config){
-			if(config["stage"] == null){
-				errorLogger.log("No Stage Specified!");
-			}
-			stage = config["stage"];
-		},
+        init: function(config){
+            if(config["stage"] == null){
+                errorLogger.log("No Stage Specified!");
+            }
+            stage = config["stage"];
+        },
         newInstance: function(config){
             return newInstance(config);
         },
-		getInstanceFromPoint: function(p){
-			return getInstanceFromPoint(p);
-		}
+        getInstanceFromPoint: function(p){
+            return getInstanceFromPoint(p);
+        },
+        getDefaultLineHeadImgSrc: function(){
+            return defaultLineHeadImgSrc;
+        },
+        getDefaultLineTailImgSrc: function(){
+            return defaultLineTailImgSrc;
+        }
     };
  });
