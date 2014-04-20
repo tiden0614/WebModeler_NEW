@@ -20,7 +20,7 @@ require.config({
 });
 require(["WMStage", "WMClass", "WMUsecase"],
     function(WMStage, WMClass, WMUsecase){
-    var stageWidth = 1000, stageHeight = 600
+    var stageWidth = 1000, stageHeight = 550
     WMStage.init({
         container: "wmclass-stage", width: stageWidth, height: stageHeight,
         elementFactory: WMClass
