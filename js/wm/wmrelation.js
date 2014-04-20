@@ -6,6 +6,8 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 	var WMRelationIdCount = 0;
 	var WMRelationStorage = [];
 	var WMElementRelMap = {};
+	var defaultLineEndWidth = 16;
+	var defaultLineEndHeight = 16;
 	var relNameMask = $(".relNameMask");
 	var generateNewWMRelationComponents = function(config){
 		debugLogger.log("Creating New Relation");
@@ -36,12 +38,16 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			width: 16, height: 16, src: "icons/remove-icon.png"
 		});
 		var lineHead = WMUtils.getImage({
-			x: eP.x, y: eP.y, width: 16, height: 16, offset: {x: 8, y: 0},
+			x: eP.x, y: eP.y, width: defaultLineEndWidth,
+			height: defaultLineEndHeight,
+			offset: {x: defaultLineEndWidth / 2, y: 0},
 			src: config["lineHeadImgSrc"],
 			rotation: WMUtils.getRotationAngle(sP, eP)
 		});
 		var lineTail = WMUtils.getImage({
-			x: sP.x, y: sP.y, width: 16, height: 16, offset: {x: 8, y: 0},
+			x: sP.x, y: sP.y, width: defaultLineEndWidth,
+			height: defaultLineEndHeight,
+			offset: {x: defaultLineEndWidth / 2, y: 0},
 			src: config["lineTailImgSrc"],
 			rotation: 180 + WMUtils.getRotationAngle(sP, eP)
 		});

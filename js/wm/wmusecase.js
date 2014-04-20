@@ -18,10 +18,10 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var stage = null;
     var nameMask = $(".nameMask");
     var typeSrcMap = {
-        D: "icons/inherit-arrow.png",
-        X: "icons/rhombus.png",
+        D: "icons/empty-arrow.png",
+        X: "icons/empty-rhombus.png",
         line: "icons/blank.png",
-        "default": "icons/inherit-arrow-png"
+        "default": "icons/empty-arrow.png"
     };
     var shapeGeneratorMap = {};
 

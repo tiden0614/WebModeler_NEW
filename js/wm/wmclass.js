@@ -20,9 +20,12 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var methPool = $("#wmclass-container .methPool");
     var classNameDiv = $(".nameMask");
     var typeSrcMap = {
-        D: "icons/inherit-arrow.png",
-        X: "icons/rhombus.png",
-        line: "icons/blank.png"
+        D: "icons/new-inherit-arrow.png",
+        X: "icons/empty-rhombus.png",
+        H: "icons/filled-rhombus.png",
+        I: "icons/empty-arrow.png",
+        line: "icons/blank.png",
+        "default": "icons/blank.png"
     };
     var shapeGeneratorMap = {};
 
