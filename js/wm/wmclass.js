@@ -18,7 +18,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var stage = null;
     var attrPool = $("#wmclass-container .attrPool");
     var methPool = $("#wmclass-container .methPool");
-    var classNameDiv = $("#wmclass-container .nameMask");
+    var classNameDiv = $(".nameMask");
     var typeSrcMap = {
         D: "icons/inherit-arrow.png",
         X: "icons/rhombus.png",
@@ -42,24 +42,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
 
     var maskThis = function(){
         var _this = this;
-        var generateInnerInput = function(config){
-            config = WMUtils.validateConfig(config, {
-                top: 0, left: 0, id: 0, value: "", width: 20,
-                fontSize: 12, height: 18
-            });
-            var width = new Number(config["width"]) > 20 ?
-                                config["width"] : 20;
-            var inputHtml = "<input type='text' value='{v}' "
-                          + "data-id='{id}' class='fixed' "
-                          + "style='top: {top}px; left: {left}px; "
-                          + "width: {width}px; height: {height}px;"
-                          + "font-size: {fs}px'>";
-            return inputHtml.format({
-                v: config["value"], id: config["id"], top: config["top"],
-                left: config["left"], width: width, height: config["height"],
-                fs: config["fontSize"]
-            });
-        };
+        var generateInnerInput = WMUtils.generateInputHtml;
         var generateAttrPoolContent = function(pool, poolName){
             var poolPos = getPointOnPage(pool.getAbsolutePosition());
             var poolDom = attrPool;
@@ -731,6 +714,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                                     + self.WMGetIdString());
                                 self.holdStart = false;
                                 self.longPressConnect = false;
+                                self.WMGetComponent("rect").setFill("white");
                                 var _newClass = newInstance({
                                     x: self.holdPoint["x"] - defaultClassWidth / 2,
                                     y: self.holdPoint["y"] - defaultClassHeight / 2,

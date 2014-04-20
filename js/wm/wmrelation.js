@@ -6,6 +6,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 	var WMRelationIdCount = 0;
 	var WMRelationStorage = [];
 	var WMElementRelMap = {};
+	var relNameMask = $(".relNameMask");
 	var generateNewWMRelationComponents = function(config){
 		debugLogger.log("Creating New Relation");
 		config = WMUtils.validateConfig(config, {
@@ -30,10 +31,9 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			fontSize: 16, fontFamily: "Calibri",
 			fill: "#555", padding: 5, align: "center"
 		});
-		var textHitBox = new Kinetic.Rect({
-			x: (sP.x + eP.x) / 2, y: (sP.y + eP.y) / 2,
-			width: text.getWidth(), height: text.getHeight(),
-			opcity: 0.5, fill: "lightyellow"
+		var removeBox = WMUtils.getImage({
+			x: (sP.x + eP.x) / 2 - 40, y: (sP.y + eP.y) / 2 + 8,
+			width: 16, height: 16, src: "icons/remove-icon.png"
 		});
 		var lineHead = WMUtils.getImage({
 			x: eP.x, y: eP.y, width: 16, height: 16, offset: {x: 8, y: 0},
@@ -54,6 +54,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			fill: "black", opacity: 0
 		});
 		(function(){
+			var _group = group;
 			lineHeadHitBox.lineEnd = "Head";
 			lineTailHitBox.lineEnd = "Tail";
 			lineHeadHitBox.lineEndObj = config["end"];
@@ -89,6 +90,9 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 				__l.draw();
 				__l.lineEndDrawingHitBox.lineEndFocus = this;
 			};
+			var onHitBoxDoubleTap = function(e){
+				_group.WMToggleComponents(true);
+			};
 			var lineHeadHitBoxHammer = new Hammer(lineHeadHitBox);
 			var lineTailHitBoxHammer = new Hammer(lineTailHitBox);
 			lineHeadHitBoxHammer.on("touchstart", onHitBoxTouchStart);
@@ -97,9 +101,15 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			lineTailHitBoxHammer.on("touchend", onHitBoxTouchEnd);
 			lineHeadHitBoxHammer.on("hold", onHitBoxHold);
 			lineTailHitBoxHammer.on("hold", onHitBoxHold);
+			lineHeadHitBoxHammer.on("doubletap", onHitBoxDoubleTap);
+			lineTailHitBoxHammer.on("doubletap", onHitBoxDoubleTap);
+			var removeBoxHammer = new Hammer(removeBox);
+			removeBoxHammer.on("touch", function(){
+				_group.destroyThis();
+			});
 			group.WMAddComponent(line, "line");
-			//group.WMAddComponent(text, "text");
-			//group.WMAddComponent(textHitBox, "textHitBox");
+			group.WMAddComponent(text, "nameText");
+			group.WMAddComponent(removeBox, "removeBox");
 			group.WMAddComponent(lineHead, "lineHead");
 			group.WMAddComponent(lineTail, "lineTail");
 			group.WMAddComponent(lineHeadHitBox, "lineHeadHitBox");
@@ -107,6 +117,18 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			group.editable = false;
 			group.start = config["start"];
 			group.end = config["end"];
+			removeBox.hide();
+			group.destroyThis = function(){
+				delete WMElementRelMap[this.start.id][this.end.id];
+				delete WMElementRelMap[this.end.id][this.start.id];
+				var _layer = this.getLayer();
+				this.destroy();
+				relNameMask.css({
+					"z-index": -10
+				});
+				relNameMask.html("");
+				_layer.draw();
+			};
 			group.WMRefreshPosition = function(){
 				var sp = startObj.WMGetClosestPoint(endObj.getPosition());
 				var ep = endObj.WMGetClosestPoint(startObj.getPosition());
@@ -114,7 +136,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 				var md = {x: (sp.x + ep.x) / 2, y: (sp.y + ep.y) / 2};
 				var ra = WMUtils.getRotationAngle(sp, ep);
 				text.setPosition(md);
-				textHitBox.setPosition(md);
+				removeBox.setPosition({x: md.x - 35, y: md.y + 5});
 				lineHead.setPosition(ep);
 				lineHead.setRotation(ra)
 				lineTail.setPosition(sp);
@@ -134,8 +156,60 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			group.WMGetIdString = function(){
 				return "WMRelation { id: " + this.id + " }";
 			};
+			group.WMToggleComponents = function(toggle){
+				if(arguments.length > 0){
+					this.editable = toggle;
+				} else {
+					this.editable = !this.editable;
+				}
+				var _layer = this.getLayer();
+				var text = this.WMGetComponent("nameText");
+				if(_layer){
+					if(this.editable){
+						var relationFocus = _layer.relationFocus;
+						if(relationFocus && relationFocus.editable &&
+							relationFocus != this){
+							if(typeof(relationFocus.WMToggleComponents) == "function"){
+								relationFocus.WMToggleComponents(false);
+							}
+						}
+						_layer.relationFocus = this;
+						relNameMask.css({
+							top: text.getY(), left: text.getX(),
+							"z-index": 10
+						});
+						var inputObj = $(WMUtils.generateInputHtml({
+							value: text.getText(),
+							width: text.getWidth(),
+							fontSize: 14, height: 23
+						}));
+						inputObj.on("input", function(){
+							relNameMask.css({
+								top: text.getY(), left: text.getX(),
+								"z-index": 10
+							});
+							text.setText($(this).val());
+							var w = text.getWidth(), h = text.getHeight();
+							$(this).css("width", text.getWidth() - 30);
+							_layer.draw();
+						});
+						relNameMask.append(inputObj);
+						this.WMGetComponent("removeBox").show();
+						_layer.draw();
+					} else {
+						relNameMask.css({
+							"z-index": -10
+						});
+						relNameMask.html("");
+						_layer.relationFocus = null;
+						this.WMGetComponent("removeBox").hide();
+						_layer.draw();
+					}
+				}
+			};
 		})();
 		WMRelationStorage.push(group);
+		group.WMToggleComponents(false);
 		return group;
 	};
 

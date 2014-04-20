@@ -148,6 +148,14 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 					}
 					WMUtils.globalFocus(null);
 				}
+				var relationFocus = layer.relationFocus;
+				if(relationFocus != null){
+					if(relationFocus.editable){
+						if(typeof(relationFocus.WMToggleComponents) == "function"){
+							relationFocus.WMToggleComponents(false);
+						}
+					}
+				}
 				layer.lineEndDrawingHitBox.remove();
 				layer.draw();
 			});

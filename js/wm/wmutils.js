@@ -39,17 +39,20 @@ define(["Kinetic"], function(Kinetic){
     };
 	var globalFocus = null;
 	var PI = Math.PI, PI_2 = Math.PI / 2;
-    return {
-        validateConfig: function(config, attributes){
-            config = config || {};
-            if(attributes != null){
-                for(var key in attributes){
-                    if(config[key] == null){
-                        config[key] = attributes[key];
-                    }
+    var validateConfig = function(config, attributes){
+        config = config || {};
+        if(attributes != null){
+            for(var key in attributes){
+                if(config[key] == null){
+                    config[key] = attributes[key];
                 }
             }
-            return config;
+        }
+        return config;
+    };
+    return {
+        validateConfig: function(config, attributes){
+            return validateConfig(config, attributes);
         },
         setCursor: function(cursor){
             document.body.style.cursor = cursor;
@@ -198,6 +201,24 @@ define(["Kinetic"], function(Kinetic){
 		},
 		recognizeTrack: function(ps){
 			return recognizer.Recognize(ps, false, false, true);
-		}
+		},
+        generateInputHtml: function(config){
+            config = validateConfig(config, {
+                top: 0, left: 0, id: 0, value: "", width: 20,
+                fontSize: 12, height: 18
+            });
+            var width = new Number(config["width"]) > 20 ?
+                                config["width"] : 20;
+            var inputHtml = "<input type='text' value='{v}' "
+                          + "data-id='{id}' class='fixed' "
+                          + "style='top: {top}px; left: {left}px; "
+                          + "width: {width}px; height: {height}px;"
+                          + "font-size: {fs}px'>";
+            return inputHtml.format({
+                v: config["value"], id: config["id"], top: config["top"],
+                left: config["left"], width: width, height: config["height"],
+                fs: config["fontSize"]
+            });
+        }
     };
 });

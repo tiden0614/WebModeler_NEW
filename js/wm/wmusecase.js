@@ -16,7 +16,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var eventLogger = WMUtils.getLogger({name: "WMClass", level: "EVENT", on: true});
     var errorLogger = WMUtils.getLogger({name: "WMClass", level: "ERROR", on: true});
     var stage = null;
-    var nameMask = $("#wmusecase-container .nameMask");
+    var nameMask = $(".nameMask");
     var typeSrcMap = {
         D: "icons/inherit-arrow.png",
         X: "icons/rhombus.png",
@@ -255,7 +255,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         });
         var _shape = config["shape"];
         delete config["shape"];
-        var groupGen = shapeGeneratorMap[shape];
+        var groupGen = shapeGeneratorMap[_shape];
         if(groupGen == null){
             groupGen = generateNewWMUsecaseInnerComponents;
         }
