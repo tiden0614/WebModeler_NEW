@@ -40,7 +40,7 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 			});
 			layer.trash = WMUtils.getImage({
 				width: 100, height: 100,
-				x: 0, y: stage.getHeight() - 100,
+				x: 10, y: stage.getHeight() - 100,
 				src: "icons/trash.png"
 			});
 			layer.trash.WMIsInside = function(p){

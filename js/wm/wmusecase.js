@@ -6,10 +6,10 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var WMClassStorage = [];
     var WMRelationStorage = [];
     var attrHeight = 20;
-    var defaultUserWidth = 120;
-    var defaultUserHeight = 165;
-    var defaultUsecaseWidth = 200;
-    var defaultUsecaseHeight = 80;
+    var defaultUserWidth = 60;
+    var defaultUserHeight = 100;
+    var defaultUsecaseWidth = 150;
+    var defaultUsecaseHeight = 60;
     var defaultLineHeadImgSrc = "icons/blank.png";
     var defaultLineTailImgSrc = "icons/blank.png";
     var debugLogger = WMUtils.getLogger({name: "WMClass", level: "DEBUG", on: true});
