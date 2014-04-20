@@ -10,6 +10,10 @@
     left: 0;
 }
 
+.tab-content{
+    position: absolute;
+}
+
 #stage {
     z-index: 0;
     top: 40px;

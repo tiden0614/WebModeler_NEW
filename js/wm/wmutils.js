@@ -143,9 +143,14 @@ define(["Kinetic"], function(Kinetic){
                 this.box = bbox
                 = stage.getContainer().getBoundingClientRect();
             }
+
+            // return {
+            //     x: p.x + bbox.left,
+            //     y: p.y + bbox.top - 40
+            // };
             return {
-                x: p.x + bbox.left,
-                y: p.y + bbox.top
+                x: p.x,
+                y: p.y,
             };
         },
 		getRotationAngle: function(ps, pe){

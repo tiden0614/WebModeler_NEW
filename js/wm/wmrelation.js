@@ -6,11 +6,6 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 	var WMRelationIdCount = 0;
 	var WMRelationStorage = [];
 	var WMElementRelMap = {};
-	var typeSrcMap = {
-		D: "icons/inherit-arrow.png",
-		X: "icons/rhombus.png",
-		line: "icons/blank.png"
-	};
 	var generateNewWMRelationComponents = function(config){
 		debugLogger.log("Creating New Relation");
 		config = WMUtils.validateConfig(config, {
@@ -66,9 +61,10 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			lineTailHitBox.WMSwitchLineEndType = function(type){
 				var lineEndImg =
 					this.getParent().WMGetComponent("line" + this.lineEnd);
+				var typeSrcMap = this.lineEndObj.WMGetTypeSrcMap();
 				var src = typeSrcMap[type];
 				if(src == null){
-					src = typeSrcMap["inherit"];
+					src = typeSrcMap["default"];
 				}
 				lineEndImg.WMLoadImg(src);
 			};

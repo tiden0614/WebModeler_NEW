@@ -11,16 +11,23 @@ require.config({
         WMRelation: "wm/wmrelation",
         WMStage: "wm/wmstage",
         WMClass: "wm/wmclass",
+        WMUsecase: "wm/wmusecase",
         // dojoParser: "lib/dojo/parser",
         // dojoBorderContainer: "lib/dijit/layout/BorderContainer",
         // dojoTabContainer: "lib/dijit/layout/TabContainer",
         // dojoContentPane: "lib/dijit/layout/ContentPane"
     }
 });
-require(["WMClass", "WMStage"], function(WMClass, WMStage){
-	WMStage.init({
-		container: "stage", width: 1000, height: 600,
+require(["WMStage", "WMClass", "WMUsecase"],
+    function(WMStage, WMClass, WMUsecase){
+    var stageWidth = 1000, stageHeight = 600
+    WMStage.init({
+        container: "wmclass-stage", width: stageWidth, height: stageHeight,
         elementFactory: WMClass
+    });
+	WMStage.init({
+		container: "wmusecase-stage", width: stageWidth, height: stageHeight,
+        elementFactory: WMUsecase
 	});
 });
 $("a[href=#wmclass-container]").tab("show");

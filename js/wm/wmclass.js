@@ -12,9 +12,14 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var eventLogger = WMUtils.getLogger({name: "WMClass", level: "EVENT", on: true});
     var errorLogger = WMUtils.getLogger({name: "WMClass", level: "ERROR", on: true});
     var stage = null;
-    var attrPool = $(".attrPool");
-    var methPool = $(".methPool");
-    var classNameDiv = $(".className");
+    var attrPool = $("#wmclass-container .attrPool");
+    var methPool = $("#wmclass-container .methPool");
+    var classNameDiv = $("#wmclass-container .nameMask");
+    var typeSrcMap = {
+        D: "icons/inherit-arrow.png",
+        X: "icons/rhombus.png",
+        line: "icons/blank.png"
+    };
 
     var getPointOnPage = function(p){
         if(stage == null){
@@ -482,7 +487,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             /* 上中 */
             case 2: return {
                 x: rectPosition.x + width / 2,
-                y: rectPosition.y + height / 2
+                y: rectPosition.y
             };
             /* 右上角 */
             case 3: return {
@@ -563,6 +568,8 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             var p = getClosestConnectPoint.call(this, point);
             return p;
         };
+
+        group.WMGetTypeSrcMap = function(){return typeSrcMap};
 
         group.WMGetIdString = function(){
             return "WMClass { id: " + this.id + " }";
