@@ -14,7 +14,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 		config = WMUtils.validateConfig(config, {
 			start: null, end: null, text: "New Relation " + WMRelationIdCount,
 			type: "inherit", lineHeadImgSrc: "icons/blank.png",
-			lineTailImgSrc: "icons/blank.png"
+			lineTailImgSrc: "icons/blank.png", dash: null
 		});
 		var startObj = config["start"], endObj = config["end"];
 		if(startObj == null || endObj == null){
@@ -25,7 +25,8 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 		var eP = endObj.WMGetClosestPoint(startObj.getPosition());
 		var group = WMGroup.newInstance({x: 0, y: 0});
 		var line = new Kinetic.Line({
-			points: [sP.x, sP.y, eP.x, eP.y], stroke: "black", strokeWidth: 2
+			points: [sP.x, sP.y, eP.x, eP.y], stroke: "black", strokeWidth: 2,
+			dash: config["dash"]
 		});
 		var text = new Kinetic.Text({
 			x: (sP.x + eP.x) / 2, y: (sP.y + eP.y) / 2,
@@ -89,7 +90,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 				var __l = this.getLayer();
 				var hbx = __l.lineEndDrawingHitBox;
 				var rec = this.lineEndObj.WMGetComponent("rect");
-				hbx.setPosition(this.lineEndObj.getPosition());
+				hbx.setPosition(rec.getAbsolutePosition());
 				hbx.setWidth(rec.getWidth());
 				hbx.setHeight(rec.getHeight());
 				__l.add(__l.lineEndDrawingHitBox);

@@ -121,10 +121,14 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 						if(t != null && t != f){
 							var dLHIS = elementFactory.getDefaultLineHeadImgSrc();
 							var dLTIS = elementFactory.getDefaultLineTailImgSrc();
-							WMRelation.connect({
+							var config = {
 								start: f, end: t,
 								lineHeadImgSrc: dLHIS, lineTailImgSrc: dLTIS
-							});
+							};
+							if(t.dashRelation === true){
+								config["dash"] = [20, 10];
+							}
+							WMRelation.connect(config);
 							t.WMGetComponent("rect").setFill("white");
 							eventLogger.log("Found t " + t.WMGetIdString());
 						}

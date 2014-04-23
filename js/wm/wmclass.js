@@ -682,15 +682,17 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             });
             hammer.on("touchstart", function(e){
                 e.preventDefault();
-                if(!this.gestureCreated){
-                    eventLogger.log("TOUCHSTART on " + this.WMGetIdString());
-                    this.holdStart = true;
-                    this.holdPoint = getPointOnStage({
+                var p = getPointOnStage({
                         x: e.touches[0]["pageX"],
                         y: e.touches[0]["pageY"]
-                    });
-                    var self = this;
-                    if(e.touches.length == 1 && !this.editable){
+                });
+                var self = getInstanceFromPoint(p);
+                if(!self.gestureCreated){
+                    eventLogger.log("TOUCHSTART on " + self.WMGetIdString());
+                    debugLogger.log("TOUCHSTART on " + self.WMGetIdString());
+                    self.holdStart = true;
+                    self.holdPoint = p;
+                    if(e.touches.length == 1 && !self.editable){
                         setTimeout(function(){
                             if(self.holdStart && !self.longPressConnect
                                 && !self.editable){
@@ -710,11 +712,13 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                                 self.getLayer().draw();
                             }
                         }, 800);
-                    } else if(e.touches.length > 1 && !this.editable){
+                    } else if(e.touches.length > 1 && !self.editable){
                         setTimeout(function(){
                             if(self.holdStart && !self.editable){
                                 eventLogger.log("2 TOUCHES HOLD on "
                                     + self.WMGetIdString());
+                                debugLogger.log("About to draw a new WMClass that"
+                                    + "is connected to " + self.WMGetIdString());
                                 self.holdStart = false;
                                 self.longPressConnect = false;
                                 self.WMGetComponent("rect").setFill("white");
