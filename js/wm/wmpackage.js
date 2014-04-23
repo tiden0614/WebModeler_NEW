@@ -243,6 +243,11 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         group.move = function(p){
             WMRelation.refreshRelationsByObj(this);
             oriMove.call(this, p);
+            var ap = this.getAbsolutePosition();
+            if(ap.x < 0) ap.x = 0;
+            if(ap.y < 0) ap.y = 0;
+            if(ap.x > stage.getWidth()) ap.x = stage.getWidth();
+            if(ap.y > stage.getHeight()) ap.y = stage.getHeight();
         };
 
         var oriDest = group.destroy;
@@ -620,6 +625,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         },
         getDefaultLineTailImgSrc: function(){
             return defaultLineTailImgSrc;
+        },
+        getWMName: function(){
+            return "WMPackage";
         }
     };
  });

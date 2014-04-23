@@ -9,8 +9,15 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 	var eventLogger = WMUtils.getLogger({
 		name: "main", level: "EVENT", on: true
 	});
+	var stageAMap = {
+		WMClass: $("a[href=#wmclass-container]"),
+		WMUsecase: $("a[href=#wmusecase-container]"),
+		WMPackage: $("a[href=#wmpackage-container]")
+	};
+	var stageSequence = ["WMClass", "WMUsecase", "WMPackage"];
 	var _init = function(config){
 		(function(config){
+			//config = WMUtils.validateConfig(config, {WMStageName: "WMClass"});
 			var stage = null;
 			var layer = null;
 			var elementFactory = config["elementFactory"];
@@ -159,6 +166,28 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 				debugLogger.log("About to draw global strokes");
 				layer.add(layer.globalDrawingHitBox);
 				layer.draw();
+			});
+			backgroundHitBoxHammer.on("swipeleft", function(){
+				var stageName = elementFactory.getWMName();
+				var length = stageSequence.length;
+				var thisIndex = stageSequence.indexOf(stageName);
+				if(thisIndex == -1) thisIndex = 1;
+				var previous = (thisIndex - 1 + length) % length;
+				var targetName = stageSequence[previous];
+				var targetA = stageAMap[targetName];
+				debugLogger.log("Switching to stage of " + stageName);
+				targetA.click();
+			});
+			backgroundHitBoxHammer.on("swiperight", function(){
+				var stageName = elementFactory.getWMName();
+				var length = stageSequence.length;
+				var thisIndex = stageSequence.indexOf(stageName);
+				if(thisIndex == -1) thisIndex = 1;
+				var next = (thisIndex + 1) % length;
+				var targetName = stageSequence[next];
+				var targetA = stageAMap[targetName];
+				debugLogger.log("Switching to stage of " + stageName);
+				targetA.click();
 			});
 			var onDrawingTouchStart = function(e){
 				var p = WMUtils.getPointOnStage({

@@ -781,6 +781,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         },
         getDefaultLineTailImgSrc: function(){
             return defaultLineTailImgSrc;
+        },
+        getWMName: function(){
+            return "WMClass";
         }
     };
  });
