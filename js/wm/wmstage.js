@@ -175,7 +175,7 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 				var previous = (thisIndex - 1 + length) % length;
 				var targetName = stageSequence[previous];
 				var targetA = stageAMap[targetName];
-				debugLogger.log("Switching to stage of " + stageName);
+				debugLogger.log("Switching to stage of " + targetName);
 				targetA.click();
 			});
 			backgroundHitBoxHammer.on("swiperight", function(){
@@ -186,7 +186,7 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 				var next = (thisIndex + 1) % length;
 				var targetName = stageSequence[next];
 				var targetA = stageAMap[targetName];
-				debugLogger.log("Switching to stage of " + stageName);
+				debugLogger.log("Switching to stage of " + targetName);
 				targetA.click();
 			});
 			var onDrawingTouchStart = function(e){
