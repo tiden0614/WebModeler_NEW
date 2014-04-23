@@ -12,7 +12,7 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 	var generateNewWMRelationComponents = function(config){
 		debugLogger.log("Creating New Relation");
 		config = WMUtils.validateConfig(config, {
-			start: null, end: null, text: "New Relation " + WMRelationIdCount,
+			start: null, end: null, text: "New Relation " + WMRelationIdCount++,
 			type: "inherit", lineHeadImgSrc: "icons/blank.png",
 			lineTailImgSrc: "icons/blank.png", dash: null
 		});
@@ -53,11 +53,11 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			rotation: 180 + WMUtils.getRotationAngle(sP, eP)
 		});
 		var lineHeadHitBox = new Kinetic.Rect({
-			x: eP.x, y: eP.y, width: 60, height: 60, offset: {x: 30, y: 30},
+			x: eP.x, y: eP.y, width: 40, height: 40, offset: {x: 20, y: 20},
 			fill: "black", opacity: 0
 		});
 		var lineTailHitBox = new Kinetic.Rect({
-			x: sP.x, y: sP.y, width: 60, height: 60, offset: {x: 30, y: 30},
+			x: sP.x, y: sP.y, width: 40, height: 40, offset: {x: 20, y: 20},
 			fill: "black", opacity: 0
 		});
 		(function(){

@@ -6,17 +6,18 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
     var WMPackageStorage = [];
     var WMRelationStorage = [];
     var attrHeight = 20;
-    var defaultPackageWidth = 120;
-    var defaultPackageHeight = 70;
+    var defaultPackageWidth = 180;
+    var defaultPackageHeight = 105;
     var defaultHugePackageWidth = 300;
     var defaultHugePackageHeight = 300;
-    var triggerDeltaX = 20;
-    var triggerDeltaY = 20;
+    var triggerDeltaX = 5;
+    var triggerDeltaY = 5;
     var scalingFactor = 0.01;
     var areaThreshold = defaultHugePackageWidth * defaultHugePackageHeight;
     var scalingAnimationDuration = 200;
-    var defaultLineHeadImgSrc = "icons/blank.png";
-    var defaultLineTailImgSrc = "icons/empty-arrow.png";
+    var defaultLineHeadImgSrc = "icons/empty-arrow.png";
+    var defaultLineTailImgSrc = "icons/blank.png";
+    var defaultLineName = "<<import>>";
     var debugLogger = WMUtils.getLogger({name: "WMPackage", level: "DEBUG", on: true});
     var eventLogger = WMUtils.getLogger({name: "WMPackage", level: "EVENT", on: true});
     var errorLogger = WMUtils.getLogger({name: "WMPackage", level: "ERROR", on: true});
@@ -141,6 +142,8 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             group.parentPackage = null;
             group.lastMovePoint = {x: 0, y: 0};
             group.dashRelation = true;
+            group.dontMove = false;
+            group.defaultLineName = defaultLineName;
         })();
 
         return group;
@@ -248,6 +251,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             if(ap.y < 0) ap.y = 0;
             if(ap.x > stage.getWidth()) ap.x = stage.getWidth();
             if(ap.y > stage.getHeight()) ap.y = stage.getHeight();
+            this.setAbsolutePosition(ap);
         };
 
         var oriDest = group.destroy;
@@ -317,13 +321,25 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             eventLogger.log("Double Tapped " + this.WMGetIdString());
             this.holdStart = false;
             if(!this.gestureCreated && !this.editable){
-                var focus = WMUtils.globalFocus();
-                if(focus != this){
-                    if(focus && typeof(focus.WMToggleComponents) == "function"){
-                        focus.WMToggleComponents(false);
+                if(this.dimensionStatus == 0){
+                    var focus = WMUtils.globalFocus();
+                    if(focus != this){
+                        if(focus && typeof(focus.WMToggleComponents) == "function"){
+                            focus.WMToggleComponents(false);
+                        }
+                        this.WMToggleComponents(true);
+                        WMUtils.globalFocus(this);
                     }
-                    this.WMToggleComponents(true);
-                    WMUtils.globalFocus(this);
+                } else {
+                    debugLogger.log("About to draw global strokes");
+                    var rect = this.WMGetComponent("rect");
+                    var rctp = rect.getAbsolutePosition();
+                    var layer = this.getLayer();
+                    layer.globalDrawingHitBox.setPosition({x: rctp.x, y: rctp.y});
+                    layer.globalDrawingHitBox.setWidth(rect.getWidth());
+                    layer.globalDrawingHitBox.setHeight(rect.getHeight());
+                    layer.add(layer.globalDrawingHitBox);
+                    layer.draw();
                 }
             }
         });
@@ -341,7 +357,8 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                     this.holdStart = false;
                 }
             }
-            if(e.touches.length == 1 && !this.editable && !this.longPressConnect){
+            if(e.touches.length == 1 && !this.editable
+                && !this.longPressConnect && !this.dontMove){
                 eventLogger.log("DRAGGING on " + this.WMGetIdString()
                     + ", p: " + WMUtils.getObjectStr(p));
                 var rect = this.WMGetComponent("rect");
@@ -375,7 +392,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                 this.getLayer().batchDraw();
             /* 两指操作时，为使用双指创建新类之后的拖拽操作 */
             } else if (e.touches.length == 2 && !this.editable
-                    && !this.longPressConnect && this.gestureCreated){
+                    && !this.longPressConnect && this.gestureCreated
+                    /* 双指动作目前先屏蔽 */
+                    && false){
                 eventLogger.log("DRAGGING on Gesture Created "
                         + this.WMGetIdString() + ", p:"
                         + WMUtils.getObjectStr(p));
@@ -400,6 +419,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             eventLogger.log("TOUCHEND on " + this.WMGetIdString());
             this.gestureCreated = false;
             this.holdStart = false;
+            this.dontMove = false;
             if(this.WMIsInsideTrash()){
                 this.destroy();
             }
@@ -423,7 +443,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                 x: e.touches[0]["pageX"],
                 y: e.touches[0]["pageY"]
             });
+            this.getLayer().globalDrawingHitBox.remove();
             this.lastMovePoint = pOS;
+            this.dontMove = false;
             if(!this.gestureCreated && this.dimensionStatus == 0){
                 eventLogger.log("TOUCHSTART on " + this.WMGetIdString());
                 this.holdStart = true;
@@ -449,7 +471,9 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                             self.getLayer().draw();
                         }
                     }, 800);
-                } else if(e.touches.length > 1 && !this.editable){
+                } else if(e.touches.length > 1 && !this.editable
+                    /* 双指动作目前先屏蔽 */
+                    && false){
                     setTimeout(function(){
                         if(self.holdStart && !self.editable){
                             eventLogger.log("2 TOUCHES HOLD on "
@@ -476,8 +500,11 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
             var gesture = e["gesture"];
             /* 初始大小 */
             if(this.dimensionStatus == 0) {
-                var startScaling = gesture["deltaX"] > triggerDeltaX;
+                //var startScaling = gesture["deltaX"] > triggerDeltaX;
+                /* FIXME: 先屏蔽放大距离测试 */
+                var startScaling = true;
                 if(startScaling){
+                    this.dontMove = true;
                     this.holdStart = false;
                     this.dimensionStatus = 1;
                     var self = this;
@@ -502,6 +529,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                     hugeAnim.start();
                 }
             } else {
+                this.dontMove = true;
                 this.holdStart = false;
                 var scale = gesture["scale"];
                 var scaleFixed = 1 + (scale - 1) * scalingFactor;
@@ -518,6 +546,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
         hammer.on("pinchin", function(e){
             var gesture = e["gesture"];
             if(this.dimensionStatus == 1){
+                this.dontMove = true;
                 this.holdStart = false;
                 var scale = gesture["scale"];
                 var scaleFixed = 1 + (scale - 1) * scalingFactor;
@@ -534,6 +563,7 @@ define(["Kinetic", "Hammer", "WMGroup", "WMUtils", "WMRelation"],
                     this.move({x: 0, y: 0});
                     this.getLayer().batchDraw();
                 } else {
+                    this.dontMove = true;
                     this.dimensionStatus = 0;
                     var self = this;
                     var wDiff = w - defaultPackageWidth;

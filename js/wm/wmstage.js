@@ -135,6 +135,9 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 							if(t.dashRelation === true){
 								config["dash"] = [20, 10];
 							}
+							if(t.defaultLineName){
+								config["text"] = t.defaultLineName;
+							}
 							WMRelation.connect(config);
 							t.WMGetComponent("rect").setFill("white");
 							eventLogger.log("Found t " + t.WMGetIdString());
@@ -160,10 +163,14 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 					WMUtils.globalFocus(null);
 				}
 				layer.lineEndDrawingHitBox.remove();
+				layer.globalDrawingHitBox.remove();
 				layer.draw();
 			});
 			backgroundHitBoxHammer.on("doubletap", function(){
 				debugLogger.log("About to draw global strokes");
+				layer.globalDrawingHitBox.setPosition({x: 0, y: 0});
+				layer.globalDrawingHitBox.setWidth(stage.getWidth());
+				layer.globalDrawingHitBox.setHeight(stage.getHeight());
 				layer.add(layer.globalDrawingHitBox);
 				layer.draw();
 			});
