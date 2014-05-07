@@ -1,5 +1,9 @@
 require.config({
     baseUrl: "js",
+    /*
+     * 为了方便测试，先在每个js文件读取时加上一个参数，这样可以避免浏览器缓存这些js文件
+     * 生产环境下应该把第7行注释掉
+     */
 	urlArgs: "bust=" + new Date().getTime(),
     paths: {
         //jQuery: "lib/jquery-1.8.3.min"
@@ -13,14 +17,15 @@ require.config({
         WMClass: "wm/wmclass",
         WMUsecase: "wm/wmusecase",
         WMPackage: "wm/wmpackage",
+        WMComponent: "wm/wmcomponent",
         // dojoParser: "lib/dojo/parser",
         // dojoBorderContainer: "lib/dijit/layout/BorderContainer",
         // dojoTabContainer: "lib/dijit/layout/TabContainer",
         // dojoContentPane: "lib/dijit/layout/ContentPane"
     }
 });
-require(["WMStage", "WMClass", "WMUsecase", "WMPackage"],
-    function(WMStage, WMClass, WMUsecase, WMPackage){
+require(["WMStage", "WMClass", "WMUsecase", "WMPackage", "WMComponent"],
+    function(WMStage, WMClass, WMUsecase, WMPackage, WMComponent){
     var stageWidth = 1000, stageHeight = 550
     WMStage.init({
         container: "wmclass-stage", width: stageWidth, height: stageHeight,
@@ -34,5 +39,9 @@ require(["WMStage", "WMClass", "WMUsecase", "WMPackage"],
 		container: "wmpackage-stage", width: stageWidth, height: stageHeight,
         elementFactory: WMPackage
 	});
+    WMStage.init({
+        container: "wmcomponent-stage", width: stageWidth, height: stageHeight,
+        elementFactory: WMComponent
+    });
 });
 $("a[href=#wmclass-container]").tab("show");

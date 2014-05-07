@@ -12,7 +12,8 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 	var stageAMap = {
 		WMClass: $("a[href=#wmclass-container]"),
 		WMUsecase: $("a[href=#wmusecase-container]"),
-		WMPackage: $("a[href=#wmpackage-container]")
+		WMPackage: $("a[href=#wmpackage-container]"),
+		WMComponent: $("a[href=#wmcomponent-container]")
 	};
 	var stageSequence = ["WMClass", "WMUsecase", "WMPackage"];
 	var _init = function(config){
@@ -137,6 +138,14 @@ define(["Kinetic", "WMRelation", "Hammer", "WMUtils"],
 							}
 							if(t.defaultLineName){
 								config["text"] = t.defaultLineName;
+							}
+							if(t.WMSwitchLineEndTypeAction){
+								config["WMSwitchLineEndTypeAction"] =
+								t.WMSwitchLineEndTypeAction;
+							}
+							if(elementFactory.getDefaultLineMiddleImgSrc){
+								config["lineMiddleImgSrc"] =
+								elementFactory.getDefaultLineMiddleImgSrc();
 							}
 							WMRelation.connect(config);
 							t.WMGetComponent("rect").setFill("white");

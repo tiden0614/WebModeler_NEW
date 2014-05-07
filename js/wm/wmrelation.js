@@ -14,7 +14,8 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 		config = WMUtils.validateConfig(config, {
 			start: null, end: null, text: "New Relation " + WMRelationIdCount++,
 			type: "inherit", lineHeadImgSrc: "icons/blank.png",
-			lineTailImgSrc: "icons/blank.png", dash: null
+			lineTailImgSrc: "icons/blank.png", dash: null,
+			lineMiddleImgSrc: null, WMSwitchLineEndTypeAction: null
 		});
 		var startObj = config["start"], endObj = config["end"];
 		if(startObj == null || endObj == null){
@@ -60,23 +61,40 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			x: sP.x, y: sP.y, width: 40, height: 40, offset: {x: 20, y: 20},
 			fill: "black", opacity: 0
 		});
+		var lineMiddle = null;
+		if(config["lineMiddleImgSrc"] != null) {
+			lineMiddle = WMUtils.getImage({
+				x: (sP.x + eP.x) / 2, y: (sP.y + eP.y) / 2,
+				width: defaultLineEndWidth,
+				height: defaultLineEndHeight,
+				offset: {x: defaultLineEndWidth / 2, y: 0},
+				src: config["lineMiddleImgSrc"],
+				rotation: WMUtils.getRotationAngle(sP, eP)
+			});
+		}
 		(function(){
 			var _group = group;
 			lineHeadHitBox.lineEnd = "Head";
 			lineTailHitBox.lineEnd = "Tail";
 			lineHeadHitBox.lineEndObj = config["end"];
 			lineTailHitBox.lineEndObj = config["start"];
-			lineHeadHitBox.WMSwitchLineEndType =
-			lineTailHitBox.WMSwitchLineEndType = function(type){
-				var lineEndImg =
+			if(config["WMSwitchLineEndTypeAction"] != null
+				&& typeof(config["WMSwitchLineEndType"] == "function")){
+				lineHeadHitBox.WMSwitchLineEndType =
+				lineTailHitBox.WMSwitchLineEndType = config["WMSwitchLineEndTypeAction"];
+			} else {
+				lineHeadHitBox.WMSwitchLineEndType =
+				lineTailHitBox.WMSwitchLineEndType = function(type){
+					var lineEndImg =
 					this.getParent().WMGetComponent("line" + this.lineEnd);
-				var typeSrcMap = this.lineEndObj.WMGetTypeSrcMap();
-				var src = typeSrcMap[type];
-				if(src == null){
-					src = typeSrcMap["default"];
-				}
-				lineEndImg.WMLoadImg(src);
-			};
+					var typeSrcMap = this.lineEndObj.WMGetTypeSrcMap();
+					var src = typeSrcMap[type];
+					if(src == null){
+						src = typeSrcMap["default"];
+					}
+					lineEndImg.WMLoadImg(src);
+				};
+			}
 			var onHitBoxTouchStart = function(e){
 				this.setOpacity(0.3);
 				this.getLayer().draw();
@@ -121,6 +139,9 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 			group.WMAddComponent(lineTail, "lineTail");
 			group.WMAddComponent(lineHeadHitBox, "lineHeadHitBox");
 			group.WMAddComponent(lineTailHitBox, "lineTailHitBox");
+			if(lineMiddle != null){
+				group.WMAddComponent(lineMiddle, "lineMiddle");
+			}
 			group.editable = false;
 			group.start = config["start"];
 			group.end = config["end"];
@@ -150,6 +171,10 @@ define(["Kinetic", "Hammer", "WMUtils", "WMGroup"],
 				lineTail.setRotation(180 + ra);
 				lineHeadHitBox.setPosition(ep);
 				lineTailHitBox.setPosition(sp);
+				if(lineMiddle != null){
+					lineMiddle.setPosition(md);
+					lineMiddle.setRotation(ra);
+				}
 			};
 			group.WMGetTheOtherSide = function(obj){
 				var target = null;
